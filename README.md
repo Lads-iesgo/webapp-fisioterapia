@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WebApp de Fisioterapia
 
-## Getting Started
+Este projeto é um aplicativo web desenvolvido com **Next.js** e **TypeScript**, destinado a auxiliar o curso de fisioterapia com seus pacientes.
 
-First, run the development server:
+## Repositório Git
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+O código-fonte deste projeto está hospedado no GitHub: [https://github.com/Lads-iesgo/webapp-fisioterapia.git](https://github.com/Lads-iesgo/webapp-fisioterapia.git)
+
+## Tecnologias Utilizadas
+
+* **Next.js:** Framework React para desenvolvimento de aplicações web modernas.
+* **TypeScript:** Superset de JavaScript que adiciona tipagem estática.
+* **Node.js:** Ambiente de tempo de execução JavaScript.
+* **npm (ou Yarn):** Gerenciador de pacotes JavaScript.
+* **Git:** Sistema de controle de versão distribuído.
+
+## Pré-requisitos
+
+* **Node.js:** Certifique-se de ter o Node.js instalado em sua máquina. Você pode baixá-lo em [https://nodejs.org/](https://nodejs.org/).
+* **Git:** Certifique-se de ter o Git instalado em sua máquina. Você pode baixá-lo em [https://git-scm.com/](https://git-scm.com/).
+
+## Configuração do Projeto
+
+1. **Clone o repositório:**
+
+    ```bash
+    git clone https://github.com/Lads-iesgo/webapp-fisioterapia.git
+    cd webapp-fisioterapia
+    ```
+
+2. **Instale as dependências:**
+
+    ```bash
+    npm install # ou yarn install
+    ```
+
+3. **Inicie o servidor de desenvolvimento:**
+
+    ```bash
+    npm run dev
+    ```
+
+    Este comando inicia o servidor de desenvolvimento Next.js. Abra [http://localhost:3000](http://localhost:3000) no navegador para visualizar o aplicativo.
+
+## Estrutura do Projeto
+
+```
+📦 webapp-fisioterapia
+┣ 📂 public/           # Arquivos estáticos (imagens, fontes, etc.)
+┣ 📂 app/              # Estrutura principal do Next.js
+┃ ┣ 📂 components/     # Componentes reutilizáveis
+┃ ┣ 📂 styles/         # Estilos globais
+┃ ┗ 📜 page.tsx        # Página principal do aplicativo
+┣ 📜 package.json      # Dependências do projeto
+┣ 📜 tsconfig.json     # Configuração do TypeScript
+┗ 📜 README.md         # Documentação do projeto
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Branches
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **main:** Branch principal para versões estáveis.
+* **develop:** Branch para desenvolvimento em andamento.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contribuindo
 
-## Learn More
+Para contribuir com o projeto, siga estes passos:
 
-To learn more about Next.js, take a look at the following resources:
+1. **Crie uma nova branch a partir da `develop`:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    ```bash
+    git checkout develop
+    git checkout -b sua-nova-branch
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Faça suas alterações e commits:**
 
-## Deploy on Vercel
+    ```bash
+    git add .
+    git commit -m "Descrição das suas alterações"
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Envie suas alterações para o GitHub:**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    ```bash
+    git push origin sua-nova-branch
+    ```
+
+4. **Crie um Pull Request (PR) para a branch `develop`.**
+
+## Próximos Passos
+
+### Criando um Pull Request (PR) para a branch `develop`
+
+Um Pull Request (PR) é uma solicitação para mesclar suas alterações da sua branch para a branch `develop`. Isso permite que outros colaboradores revisem seu código e garantam que ele se encaixe no projeto. Siga estes passos para criar um PR:
+
+1. **Verifique suas alterações:**
+
+    * Certifique-se de que suas alterações estejam completas e funcionando corretamente.
+    * Use `git status` para verificar as alterações pendentes e `git diff` para revisar as modificações.
+
+2. **Envie sua branch para o GitHub:**
+
+    ```bash
+    git push origin sua-nova-branch
+    ```
+
+3. **Crie o Pull Request no GitHub:**
+
+    * Acesse o repositório do projeto no GitHub.
+    * Clique na aba "Pull requests".
+    * Clique no botão "New pull request".
+    * Selecione sua branch como a branch de origem e `develop` como a branch de destino.
+    * Adicione um título descritivo e uma descrição detalhada para o PR.
+    * Clique no botão "Create pull request".
+
+4. **Acompanhe a revisão:**
+
+    * Aguarde a revisão do seu PR por outros colaboradores.
+    * Responda aos comentários e faça as alterações necessárias.
+    * Após a aprovação, o PR poderá ser mesclado na branch `develop`.
+
+## Dicas adicionais
+
+* Escreva mensagens de commit claras e concisas.
+* Mantenha o PR o menor e mais focado possível.
+* Comunique-se de forma eficaz com os revisores.
+
+## Contato
+
+* [lads@iesgo.edu.br](mailto:lads@iesgo.edu.br)
