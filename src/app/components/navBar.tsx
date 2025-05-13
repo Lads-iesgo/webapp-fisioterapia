@@ -62,7 +62,7 @@ export default function NavBar() {
         </li>
         <li className="py-2">
           <Link
-            href="/appointment"
+            href="/cadastrar-consulta"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Cadastrar Consulta
