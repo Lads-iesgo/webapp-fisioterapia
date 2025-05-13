@@ -30,7 +30,7 @@ export default function Appointment() {
       <div className="flex flex-col flex-1">
         <TopBar title="Cadastrar Consulta" />
         
-        <main className="flex flex-1 items-center justify-center p-4 overflow-y-auto "> {/* Fundo da área principal com bg-gray-100 */}
+        <main className="flex flex-1 items-center justify-center p-4 overflow-y-auto "> {/* adc class bg-gray-100  para fundo do formulario*/}
           <div className="bg-white p-8 w-full max-w-lg mt-8"> {/* Contêiner do formulário com espaçamento superior */}
             <form onSubmit={handleSalvar} className="flex flex-col gap-6">
               <label className="flex flex-col">
