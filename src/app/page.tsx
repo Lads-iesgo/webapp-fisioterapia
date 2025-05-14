@@ -1,11 +1,11 @@
 import NavBar from "./components/navBar";
 import TopBar from "./components/topBar";
+import PaginaCadastrarConsulta from "./pages/cadastrar-consulta";
 
 export default function Home() {
   return (
-    <div className="bg-white h-screen flex flex-row">
-      <NavBar />
-      <TopBar title="Disponibilidade" />
-    </div>
+    <>
+      <PaginaCadastrarConsulta />
+    </>
   );
 }
