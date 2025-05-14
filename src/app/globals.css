@@ -28,26 +28,26 @@ input {
 }
 
 .fc-h-event {
-  @apply bg-violet-500 border border-violet-600 ;
+  @apply bg-blue-500 border border-blue-600 ;
   
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  @apply bg-violet-100 ;
+  @apply bg-blue-100 ;
 }
 
 .fc .fc-button{
-  @apply bg-violet-800 hover:bg-violet-900  ;
+  @apply bg-blue-800 hover:bg-blue-900  ;
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-  @apply bg-violet-600;
+  @apply bg-blue-600;
 }
 
 .fc .fc-button-primary:disabled {
-  @apply bg-violet-600;
+  @apply bg-blue-600;
 }
 .fc-v-event {
-  @apply bg-violet-500 border border-violet-600 ;
+  @apply bg-blue-500 border border-blue-600 ;
   
 }
