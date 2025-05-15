@@ -10,3 +10,12 @@ export interface HorarioConsulta {
   paciente: string;
   medico: string;
 }
+
+export interface Consulta {
+  id?: number;
+  paciente_id: number;
+  data_consulta: Date | string;
+  horario_id: number;
+  fisioterapeuta_id: number;
+  status?: string;
+}
