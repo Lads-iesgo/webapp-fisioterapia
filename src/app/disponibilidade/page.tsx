@@ -135,12 +135,13 @@ export default function Disponibilidade() {
 
       // Só monta a string se ambos existirem e forem válidos
       if (horario?.horario && data) {
-        const dataHoraString = `${data}T${horario.horario}:00`;
+        // Garante que o horário fique no formato "HH:mm:00"
+        const horarioFormatado = `${horario.horario}`;
+        const dataHoraString = `${data}T${horarioFormatado}`;
         const dataHora = new Date(dataHoraString);
         if (!isNaN(dataHora.getTime())) {
           dataHoraISO = dataHora.toISOString();
         } else {
-          // Se a data for inválida, use o valor original
           dataHoraISO = item.data_consulta;
         }
       }
@@ -149,6 +150,7 @@ export default function Disponibilidade() {
         id: item.id !== undefined ? String(item.id) : undefined,
         title: `${paciente?.nome_completo ?? ""} - ${horario?.horario ?? ""}`,
         start: dataHoraISO,
+        startStr: horario?.horario ? `${horario.horario}:00` : "",
       };
     });
     setEvents(eventos);
@@ -189,8 +191,8 @@ export default function Disponibilidade() {
               stickyHeaderDates={true}
               dayMaxEvents={true}
               handleWindowResize={true}
-              slotMinTime="08:00:00"
-              slotMaxTime="18:00:00"
+              slotMinTime="14:00:00"
+              slotMaxTime="17:00:00"
               allDaySlot={false}
               scrollTime="08:00:00"
             />

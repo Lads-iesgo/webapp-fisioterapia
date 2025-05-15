@@ -123,19 +123,40 @@ export default function Disponibilidade() {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
       const horario = horarios.find((h) => h.id === item.horario_id);
 
+      // Extrai a data (YYYY-MM-DD) da data_consulta
+      const data =
+        typeof item.data_consulta === "string"
+          ? item.data_consulta.split("T")[0]
+          : item.data_consulta.toISOString().split("T")[0];
+
+      let dataHoraISO: string | Date = item.data_consulta;
+
+      // Só monta a string se ambos existirem e forem válidos
+      if (horario?.horario && data) {
+        // Garante que o horário fique no formato "HH:mm:00"
+        const horarioFormatado = `${horario.horario}`;
+        const dataHoraString = `${data}T${horarioFormatado}`;
+        const dataHora = new Date(dataHoraString);
+        if (!isNaN(dataHora.getTime())) {
+          dataHoraISO = dataHora.toISOString();
+        } else {
+          dataHoraISO = item.data_consulta;
+        }
+      }
+
       return {
         id: item.id !== undefined ? String(item.id) : undefined,
         title: `${paciente?.nome_completo ?? ""} - ${horario?.horario ?? ""}`,
-        start: item.data_consulta,
+        start: dataHoraISO,
+        startStr: horario?.horario ? `${horario.horario}:00` : "",
       };
     });
     setEvents(eventos);
   }, [consulta, pacientes, horarios]);
-
   return (
     <>
       <NavBar />
-      <TopBar title="Disponibilidade" />
+      <TopBar title="Home" />
 
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
@@ -164,8 +185,8 @@ export default function Disponibilidade() {
               stickyHeaderDates={true}
               dayMaxEvents={true}
               handleWindowResize={true}
-              slotMinTime="08:00:00"
-              slotMaxTime="18:00:00"
+              slotMinTime="14:00:00"
+              slotMaxTime="17:00:00"
               allDaySlot={false}
               scrollTime="08:00:00"
             />
