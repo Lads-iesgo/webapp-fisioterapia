@@ -125,10 +125,30 @@ export default function Disponibilidade() {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
       const horario = horarios.find((h) => h.id === item.horario_id);
 
+      // Extrai a data (YYYY-MM-DD) da data_consulta
+      const data =
+        typeof item.data_consulta === "string"
+          ? item.data_consulta.split("T")[0]
+          : item.data_consulta.toISOString().split("T")[0];
+
+      let dataHoraISO: string | Date = item.data_consulta;
+
+      // Só monta a string se ambos existirem e forem válidos
+      if (horario?.horario && data) {
+        const dataHoraString = `${data}T${horario.horario}:00`;
+        const dataHora = new Date(dataHoraString);
+        if (!isNaN(dataHora.getTime())) {
+          dataHoraISO = dataHora.toISOString();
+        } else {
+          // Se a data for inválida, use o valor original
+          dataHoraISO = item.data_consulta;
+        }
+      }
+
       return {
         id: item.id !== undefined ? String(item.id) : undefined,
         title: `${paciente?.nome_completo ?? ""} - ${horario?.horario ?? ""}`,
-        start: item.data_consulta,
+        start: dataHoraISO,
       };
     });
     setEvents(eventos);
@@ -141,7 +161,7 @@ export default function Disponibilidade() {
 
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
-          <div className="ml-[288px] mt-64 absolute">
+          <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px]">
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               headerToolbar={{
@@ -156,7 +176,7 @@ export default function Disponibilidade() {
               selectable={true}
               selectMirror={true}
               locale={esLocale}
-              initialView="timeGridWeek"
+              initialView="dayGridMonth"
               businessHours={{
                 start: "14:00",
                 end: "16:00",
@@ -164,8 +184,15 @@ export default function Disponibilidade() {
               }}
               dateClick={handleDateClick}
               eventClick={(data) => handleDeleteModal(data)}
-              aspectRatio={1.1}
-              contentHeight={600}
+              height={600}
+              expandRows={true}
+              stickyHeaderDates={true}
+              dayMaxEvents={true}
+              handleWindowResize={true}
+              slotMinTime="08:00:00"
+              slotMaxTime="18:00:00"
+              allDaySlot={false}
+              scrollTime="08:00:00"
             />
           </div>
         </div>

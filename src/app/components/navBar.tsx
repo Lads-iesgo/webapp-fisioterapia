@@ -14,23 +14,23 @@ export default function NavBar() {
       <ul className="flex flex-col pl-10 gap-4 content-center">
         <li className="py-2">
           <Link
-            href="/"
+            href="/home"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Home
           </Link>
         </li>
-        <li className="py-2">
+        {/* <li className="py-2">
           <Link
-            href="/about"
+            href="/cadastroUsuario"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Cadastro de Usuário
           </Link>
-        </li>
+        </li> */}
         <li className="py-2">
           <Link
-            href="/contact"
+            href="/cadastroPaciente"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Cadastro de Paciente
@@ -38,26 +38,26 @@ export default function NavBar() {
         </li>
         <li className="py-2">
           <Link
-            href="/contact"
+            href="/cadastroConsulta"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Cadastro de Consulta
           </Link>
         </li>
-        <li className="py-2">
+        {/* <li className="py-2">
           <Link
-            href="/contact"
+            href="/consultarPaciente"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Consultar Paciente
           </Link>
-        </li>
+        </li> */}
         <li className="py-2">
           <Link
-            href="/contact"
+            href="/disponibilidade"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
-            Cadastrar disponibilidade
+            Cadastrar Disponibilidade
           </Link>
         </li>
       </ul>

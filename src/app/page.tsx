@@ -1,9 +1,11 @@
-import Disponibilidade from "./pages/disponibilidade";
+import NavBar from "./components/navBar";
+import Home from "./home/page";
 
-export default function Home() {
+export default function App() {
   return (
     <>
-      <Disponibilidade />
+      <NavBar />
+      <Home />
     </>
   );
 }
