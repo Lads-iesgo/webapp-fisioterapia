@@ -7,15 +7,101 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/pt-br";
-import { useEffect, useState } from "react";
+import { EventInput } from "@fullcalendar/core";
+
+import { Fragment, useEffect, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
-import { Consulta } from "../interfaces/types";
+import {
+  Consulta,
+  Evento,
+  Paciente,
+  Fisioterapeuta,
+  Horario,
+} from "../interfaces/types";
 
 export default function Disponibilidade() {
   const [consulta, setConsulta] = useState<Consulta[]>([]);
+  const [events, setEvents] = useState<EventInput[]>([]);
+  const [newEvent, setNewEvent] = useState<Evento>({
+    title: 0,
+    start: "",
+  });
+  const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
+  const [horarios, setHorarios] = useState<Horario[]>([]);
+
+  function handleDateClick(arg: { date: Date }) {
+    setNewEvent({ ...newEvent, start: arg.date, id: new Date().getTime() });
+    setShowModal(true);
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const novaConsulta: Consulta = {
+      paciente_id: newEvent.paciente_id!,
+      fisioterapeuta_id: newEvent.fisioterapeuta_id!,
+      horario_id: newEvent.horario_id!,
+      data_consulta:
+        typeof newEvent.start === "string"
+          ? new Date(newEvent.start).toISOString()
+          : newEvent.start.toISOString(),
+      status: newEvent.status ?? "agendada",
+    };
+    console.log("Enviando para API:", novaConsulta);
+    await api.post("/consulta", novaConsulta);
+
+    try {
+      const response = await api.post("/consulta", novaConsulta);
+      console.log("Consulta salva:", response.data);
+    } catch (error) {
+      console.error("Erro ao salvar consulta:", error);
+    }
+  };
+
+  function handleDeleteModal(data: { event: { id: string } }) {
+    setShowDeleteModal(true);
+    setIdToDelete(Number(data.event.id));
+  }
+
+  function handleDelete() {
+    setTodasConsultas(
+      todasConsultas.filter((event) => Number(event.id) !== Number(idToDelete))
+    );
+    setShowDeleteModal(false);
+    setIdToDelete(null);
+  }
+
+  function handleCloseModal() {
+    setShowModal(false);
+    setNewEvent({
+      title: "",
+      start: "",
+      id: 0,
+      fisioterapeuta_id: 0,
+      paciente_id: 0,
+      horario_id: 0,
+      status: "",
+    });
+    setShowDeleteModal(false);
+    setIdToDelete(null);
+  }
+
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  //   setNewEvent({
+  //     ...newEvent,
+  //     title: e.target.value,
+  //   });
+  // };
 
   useEffect(() => {
     api
@@ -27,6 +113,27 @@ export default function Disponibilidade() {
         console.error("Ops! Ocorreu um erro: " + err);
       });
   }, []);
+
+  useEffect(() => {
+    api.get("/paciente").then((res) => setPacientes(res.data));
+    api.get("/usuario").then((res) => setFisioterapeutas(res.data));
+    api.get("/horario").then((res) => setHorarios(res.data));
+  }, []);
+
+  useEffect(() => {
+    const eventos: EventInput[] = consulta.map((item) => {
+      const paciente = pacientes.find((p) => p.id === item.paciente_id);
+      const horario = horarios.find((h) => h.id === item.horario_id);
+
+      return {
+        id: item.id !== undefined ? String(item.id) : undefined,
+        title: `${paciente?.nome_completo ?? ""} - ${horario?.horario ?? ""}`,
+        start: item.data_consulta,
+      };
+    });
+    setEvents(eventos);
+  }, [consulta, pacientes, horarios]);
+
   return (
     <>
       <NavBar />
@@ -42,8 +149,8 @@ export default function Disponibilidade() {
                 center: "title",
                 end: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
-              slotDuration={"01:00"}
-              events={{}}
+              slotDuration={"01:00:00"}
+              events={events}
               nowIndicator={true}
               editable={true}
               selectable={true}
@@ -55,14 +162,203 @@ export default function Disponibilidade() {
                 end: "16:00",
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
               }}
-              // dateClick={{}}
-              // drop={}
-              // eventClick={}
+              dateClick={handleDateClick}
+              eventClick={(data) => handleDeleteModal(data)}
               aspectRatio={1.1}
               contentHeight={600}
             />
           </div>
         </div>
+
+        <Transition.Root show={showDeleteModal} as={Fragment}>
+          <Dialog
+            as="div"
+            className="relative z-10"
+            onClose={setShowDeleteModal}
+          >
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 z-10 overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel
+                    className="relative transform overflow-hidden rounded-lg
+                   bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+                  >
+                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                      <div className="sm:flex sm:items-start">
+                        <div
+                          className="mx-auto flex h-12 w-12 flex-shrink-0 items-center 
+                      justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
+                        >
+                          <ExclamationTriangleIcon
+                            className="h-6 w-6 text-red-600"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                          <Dialog.Title
+                            as="h3"
+                            className="text-base font-semibold leading-6 text-gray-900"
+                          >
+                            Delete Event
+                          </Dialog.Title>
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-500">
+                              Deseja excluir está consulta?
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                      <button
+                        type="button"
+                        className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm 
+                      font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                        onClick={handleDelete}
+                      >
+                        Excluir
+                      </button>
+                      <button
+                        type="button"
+                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 
+                      shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                        onClick={handleCloseModal}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition.Root>
+        <Transition.Root show={showModal} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={setShowModal}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 z-10 overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-600"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-base font-semibold leading-6 text-gray-900"
+                        >
+                          Adicionar Consulta
+                        </Dialog.Title>
+                        <form onSubmit={handleSubmit}>
+                          <select
+                            value={newEvent.paciente_id ?? ""}
+                            onChange={(e) =>
+                              setNewEvent({
+                                ...newEvent,
+                                paciente_id: Number(e.target.value),
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Selecione o paciente</option>
+                            {pacientes.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.nome_completo}
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={newEvent.fisioterapeuta_id ?? ""}
+                            onChange={(e) =>
+                              setNewEvent({
+                                ...newEvent,
+                                fisioterapeuta_id: Number(e.target.value),
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Selecione o fisioterapeuta</option>
+                            {fisioterapeutas.map((f) => (
+                              <option key={f.id} value={f.id}>
+                                {f.nome_completo}
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={newEvent.horario_id ?? ""}
+                            onChange={(e) =>
+                              setNewEvent({
+                                ...newEvent,
+                                horario_id: Number(e.target.value),
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Selecione o horário</option>
+                            {horarios.map((h) => (
+                              <option key={h.id} value={h.id}>
+                                {h.horario}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* outros campos, como data, status, etc */}
+                          <button type="submit">Criar</button>
+                        </form>
+                      </div>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition.Root>
       </main>
     </>
   );
