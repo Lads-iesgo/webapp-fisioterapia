@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import NavBar from "../components/navBar"; // Importa de src/app/components/navBar.tsx
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
+import PopupConfirmacao from "../components/PopupConfirmacao"; // Importa de src/app/components/PopupConfirmacao.tsx
 import api from "../services/api";
 
 interface Paciente {
@@ -69,10 +70,10 @@ export default function PaginaCadastrarConsulta() {
       setMensagem({
         tipo: "sucesso",
         texto: `Consulta cadastrada com sucesso!
-        Paciente: ${getNomePaciente(paciente)}
-        Fisioterapeuta: ${getNomeFisioterapeuta(fisioterapeuta)}
-        Data: ${formatarData(data)}
-        Horário: ${getHorarioTexto(horario)}`
+Paciente: ${getNomePaciente(paciente)}
+Fisioterapeuta: ${getNomeFisioterapeuta(fisioterapeuta)}
+Data: ${formatarData(data)}
+Horário: ${getHorarioTexto(horario)}`
       });
       setPaciente("");
       setFisioterapeuta("");
@@ -149,17 +150,6 @@ export default function PaginaCadastrarConsulta() {
                   ))}
                 </select>
               </label>
-              {mensagem && (
-                <div
-                  className={`whitespace-pre-line text-center font-semibold rounded p-3 mt-2 ${
-                    mensagem.tipo === "sucesso"
-                      ? "bg-green-100 text-green-800 border border-green-300"
-                      : "bg-red-100 text-red-800 border border-red-300"
-                  }`}
-                >
-                  {mensagem.texto}
-                </div>
-              )}
               <div className="flex justify-between mt-8">
                 <Button
                   text="Voltar"
@@ -175,6 +165,12 @@ export default function PaginaCadastrarConsulta() {
                 />
               </div>
             </form>
+            <PopupConfirmacao
+              aberto={mensagem?.tipo === "sucesso"}
+              titulo="Consulta cadastrada"
+              descricao={mensagem?.texto || ""}
+              aoFechar={() => setMensagem(null)}
+            />
           </div>
         </main>
       </div>
