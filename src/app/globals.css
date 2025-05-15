@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  @apply bg-gray-50;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+input {
+  @apply px-2;
+}
+  .fc-header-toolbar {
+    display: inline-block;
+    padding: 4px 4px;
+    
+    @apply space-x-8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.fc-day {
+  @apply m-8;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.fc-scrollgrid-sync-table {
+  @apply w-full;
+}
+
+.fc-view {
+  @apply w-full h-full lg:h-3/4 xl:h-3/5 bg-white;
+}
+
+.fc-h-event {
+  @apply bg-blue-500 border border-blue-600 ;
+  
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  @apply bg-blue-100 ;
+}
+
+.fc .fc-button{
+  @apply bg-blue-800 hover:bg-blue-900  ;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  @apply bg-blue-600;
+}
+
+.fc .fc-button-primary:disabled {
+  @apply bg-blue-600;
+}
+.fc-v-event {
+  @apply bg-blue-500 border border-blue-600 ;
+  
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
