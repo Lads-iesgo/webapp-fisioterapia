@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import NavBar from "./components/navBar";
-import TopBar from "./components/topBar";
+import NavBar from "../components/navBar";
+import TopBar from "../components/topBar";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
