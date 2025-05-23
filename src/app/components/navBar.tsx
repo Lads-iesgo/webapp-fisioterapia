@@ -60,6 +60,14 @@ export default function NavBar() {
             Cadastrar Disponibilidade
           </Link>
         </li>
+        <li className="py-2">
+          <Link
+            href="/cadastrar-consulta"
+            className="text-white hover:text-gray-300 hover:cursor-pointer"
+          >
+            Cadastrar Consulta
+          </Link>
+        </li>
       </ul>
     </nav>
   );
