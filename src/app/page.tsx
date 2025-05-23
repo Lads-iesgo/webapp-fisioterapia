@@ -1,11 +1,11 @@
 import NavBar from "./components/navBar";
-import TopBar from "./components/topBar";
-import PaginaCadastrarConsulta from "./pages/cadastrar-consulta";
+import Home from "./home/page";
 
-export default function Home() {
+export default function App() {
   return (
     <>
-      <PaginaCadastrarConsulta />
+      <NavBar />
+      <Home />
     </>
   );
 }
