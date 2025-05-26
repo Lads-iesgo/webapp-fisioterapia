@@ -34,7 +34,12 @@ export default function Disponibilidade() {
   //const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<{
+    id: number | null;
+    pacienteNome?: string;
+    fisioterapeutaNome?: string;
+    horario?: string;
+  } | null>(null);
 
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
@@ -78,30 +83,37 @@ export default function Disponibilidade() {
     }
   };
 
-  function handleDeleteModal(data: { event: { id: string } }) {
+  function handleDeleteModal(data: { event: any }) {
     setShowDeleteModal(true);
-    setIdToDelete(Number(data.event.id));
+    setEventToDelete({
+      id: Number(data.event.id),
+      pacienteNome: data.event.extendedProps.pacienteNome,
+      fisioterapeutaNome: data.event.extendedProps.fisioterapeutaNome,
+      horario: data.event.extendedProps.horario,
+    });
   }
 
   async function handleDelete() {
-    if (!idToDelete) {
+    if (!eventToDelete || !eventToDelete.id) {
       alert("Não foi possível identificar a consulta para exclusão.");
       return;
     }
 
     try {
       // Chamada para a API para excluir a consulta
-      await api.delete(`/consulta/${idToDelete}`);
+      await api.delete(`/consulta/${eventToDelete.id}`);
 
       // Atualiza o estado local removendo a consulta excluída
-      setConsulta(consulta.filter((item) => Number(item.id) !== idToDelete));
+      setConsulta(
+        consulta.filter((item) => Number(item.id) !== eventToDelete.id)
+      );
 
       // Fecha o modal e reseta o estado
       setShowDeleteModal(false);
-      setIdToDelete(null);
+      setEventToDelete(null);
 
       // Feedback para o usuário
-      alert("Consulta excluída com sucesso!");
+      alert(`Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`);
     } catch (error) {
       console.error("Erro ao excluir consulta:", error);
       alert(
@@ -122,7 +134,7 @@ export default function Disponibilidade() {
       status: "",
     });
     setShowDeleteModal(false);
-    setIdToDelete(null);
+    setEventToDelete(null);
   }
 
   useEffect(() => {
@@ -186,6 +198,9 @@ export default function Disponibilidade() {
           fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
+          pacienteNome: pacienteNome,
+          fisioterapeutaNome: fisioterapeutaNome,
+          horario: horario?.horario || "",
         },
       };
     });
@@ -211,6 +226,51 @@ export default function Disponibilidade() {
               events={events}
               nowIndicator={true}
               editable={true}
+              eventDidMount={(info) => {
+                // Cria um elemento tooltip personalizado
+                const tooltip = document.createElement("div");
+                tooltip.className = "fc-event-tooltip";
+                tooltip.innerHTML = `
+                  <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
+                    <p><strong>Paciente:</strong> ${
+                      info.event.extendedProps.pacienteNome || "Não informado"
+                    }</p>
+                    <p><strong>Fisioterapeuta:</strong> ${
+                      info.event.extendedProps.fisioterapeutaNome ||
+                      "Não informado"
+                    }</p>
+                    <p><strong>Horário:</strong> ${
+                      info.event.extendedProps.horario || "Não informado"
+                    }</p>
+                    <p><strong>Status:</strong> ${
+                      info.event.extendedProps.status || "Não informado"
+                    }</p>
+                  </div>
+                `;
+                tooltip.style.position = "absolute";
+                tooltip.style.zIndex = "10000";
+                tooltip.style.display = "none";
+
+                document.body.appendChild(tooltip);
+
+                // Mostra o tooltip no hover
+                info.el.addEventListener("mouseenter", () => {
+                  const rect = info.el.getBoundingClientRect();
+                  tooltip.style.left = rect.right + 5 + "px";
+                  tooltip.style.top = rect.top + "px";
+                  tooltip.style.display = "block";
+                });
+
+                // Esconde o tooltip quando o mouse sai
+                info.el.addEventListener("mouseleave", () => {
+                  tooltip.style.display = "none";
+                });
+
+                // Remove o tooltip quando o evento é desmontado
+                return () => {
+                  document.body.removeChild(tooltip);
+                };
+              }}
               selectable={true}
               selectMirror={true}
               locale={esLocale}
@@ -284,11 +344,20 @@ export default function Disponibilidade() {
                             as="h3"
                             className="text-base font-semibold leading-6 text-gray-900"
                           >
-                            Delete Event
+                            Excluir Consulta
                           </Dialog.Title>
                           <div className="mt-2">
                             <p className="text-sm text-gray-500">
-                              Deseja excluir está consulta?
+                              Deseja excluir a consulta de {" "}
+                              <strong>
+                                {eventToDelete?.pacienteNome ||
+                                  "paciente não identificado"}
+                              </strong>
+                              {" "} com {" "}
+                              <strong>
+                                {eventToDelete?.fisioterapeutaNome}
+                              </strong>{" "}
+                              às <strong>{eventToDelete?.horario}</strong>?
                             </p>
                           </div>
                         </div>
