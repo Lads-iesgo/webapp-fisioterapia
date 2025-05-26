@@ -189,11 +189,15 @@ export default function CadastrarPaciente() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
-      <div className="ml-72">
+      <div className="ml-72"> {/* Margem à esquerda para o NavBar */}
         <TopBar title="Cadastrar Paciente" />
-        <main className="pt-24 px-4 md:px-8 pb-8 mt-40">
+        {/* Aqui é onde ajustamos a margem, removendo o mt-40 */}
+        <main className="pt-24 px-4 md:px-8 pb-8">
           <div className="max-w-4xl mx-auto overflow-hidden rounded-[20px] shadow-lg">
+            {/* Header azul escuro sem bordas arredondadas no topo */}
             <div className="bg-blue-900 h-12 w-full"></div>
+            
+            {/* O restante do formulário permanece idêntico */}
             <form
               onSubmit={handleSubmit}
               className="border border-gray-200 bg-white px-4 sm:px-6 md:px-8 py-6 rounded-b-[20px]"
