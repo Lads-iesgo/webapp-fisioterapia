@@ -20,14 +20,14 @@ export default function NavBar() {
             Home
           </Link>
         </li>
-        {/* <li className="py-2">
+        <li className="py-2">
           <Link
             href="/cadastroUsuario"
             className="text-white hover:text-gray-300 hover:cursor-pointer"
           >
             Cadastro de Usuário
           </Link>
-        </li> */}
+        </li>
         <li className="py-2">
           <Link
             href="/cadastroPaciente"
@@ -60,14 +60,7 @@ export default function NavBar() {
             Cadastrar Disponibilidade
           </Link>
         </li>
-        <li className="py-2">
-          <Link
-            href="/cadastrar-consulta"
-            className="text-white hover:text-gray-300 hover:cursor-pointer"
-          >
-            Cadastrar Consulta
-          </Link>
-        </li>
+
       </ul>
     </nav>
   );
