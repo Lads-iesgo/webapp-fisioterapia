@@ -184,3 +184,19 @@ html, body {
 .fc-timegrid-slot-lane {
   overflow: visible !important;
 }
+
+/* Adicione ao final do arquivo */
+.fc-event-tooltip {
+  pointer-events: none;
+  max-width: 300px;
+}
+
+.fc-event {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.fc-event:hover {
+  transform: scale(1.02);
+  z-index: 100;
+}
