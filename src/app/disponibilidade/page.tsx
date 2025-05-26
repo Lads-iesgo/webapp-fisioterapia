@@ -10,7 +10,7 @@ import esLocale from "@fullcalendar/core/locales/pt-br";
 import { EventInput } from "@fullcalendar/core";
 
 import { Fragment, useEffect, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Transition, Select } from "@headlessui/react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
 import NavBar from "../components/navBar";
@@ -31,7 +31,7 @@ export default function Disponibilidade() {
     title: 0,
     start: "",
   });
-  const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
+  //const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState<number | null>(null);
@@ -57,14 +57,24 @@ export default function Disponibilidade() {
           : newEvent.start.toISOString(),
       status: newEvent.status ?? "agendada",
     };
-    console.log("Enviando para API:", novaConsulta);
-    await api.post("/consulta", novaConsulta);
 
     try {
       const response = await api.post("/consulta", novaConsulta);
       console.log("Consulta salva:", response.data);
+
+      // Atualiza o estado com a nova consulta retornada pela API
+      setConsulta([...consulta, response.data]);
+
+      // Fecha o modal após salvar
+      handleCloseModal();
+
+      // Opcional: Exibir mensagem de sucesso
+      alert("Consulta agendada com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar consulta:", error);
+      alert(
+        "Erro ao agendar consulta. Verifique o console para mais detalhes."
+      );
     }
   };
 
@@ -73,12 +83,31 @@ export default function Disponibilidade() {
     setIdToDelete(Number(data.event.id));
   }
 
-  function handleDelete() {
-    setTodasConsultas(
-      todasConsultas.filter((event) => Number(event.id) !== Number(idToDelete))
-    );
-    setShowDeleteModal(false);
-    setIdToDelete(null);
+  async function handleDelete() {
+    if (!idToDelete) {
+      alert("Não foi possível identificar a consulta para exclusão.");
+      return;
+    }
+
+    try {
+      // Chamada para a API para excluir a consulta
+      await api.delete(`/consulta/${idToDelete}`);
+
+      // Atualiza o estado local removendo a consulta excluída
+      setConsulta(consulta.filter((item) => Number(item.id) !== idToDelete));
+
+      // Fecha o modal e reseta o estado
+      setShowDeleteModal(false);
+      setIdToDelete(null);
+
+      // Feedback para o usuário
+      alert("Consulta excluída com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir consulta:", error);
+      alert(
+        "Erro ao excluir consulta. Verifique o console para mais detalhes."
+      );
+    }
   }
 
   function handleCloseModal() {
@@ -95,13 +124,6 @@ export default function Disponibilidade() {
     setShowDeleteModal(false);
     setIdToDelete(null);
   }
-
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-  //   setNewEvent({
-  //     ...newEvent,
-  //     title: e.target.value,
-  //   });
-  // };
 
   useEffect(() => {
     api
@@ -123,6 +145,9 @@ export default function Disponibilidade() {
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
+      const fisioterapeuta = fisioterapeutas.find(
+        (f) => f.id === item.fisioterapeuta_id
+      );
       const horario = horarios.find((h) => h.id === item.horario_id);
 
       // Extrai a data (YYYY-MM-DD) da data_consulta
@@ -146,15 +171,26 @@ export default function Disponibilidade() {
         }
       }
 
+      // Informações formatadas para exibição
+      const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
+      const fisioterapeutaNome =
+        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+
       return {
-        id: item.id !== undefined ? String(item.id) : undefined,
-        title: `${paciente?.nome_completo ?? ""} - ${horario?.horario ?? ""}`,
+        id: String(item.id), // Convertendo para string para evitar erro de tipagem
+        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
         start: dataHoraISO,
-        startStr: horario?.horario ? `${horario.horario}:00` : "",
+        startStr: horario?.horario ? `${horario.horario}` : "",
+        extendedProps: {
+          pacienteId: item.paciente_id,
+          fisioterapeutaId: item.fisioterapeuta_id,
+          horarioId: item.horario_id,
+          status: item.status,
+        },
       };
     });
     setEvents(eventos);
-  }, [consulta, pacientes, horarios]);
+  }, [consulta, pacientes, fisioterapeutas, horarios]);
 
   return (
     <>
@@ -307,7 +343,7 @@ export default function Disponibilidade() {
                   leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                   leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all w-auto">
                     <div>
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                         <CheckIcon
@@ -322,8 +358,11 @@ export default function Disponibilidade() {
                         >
                           Adicionar Consulta
                         </Dialog.Title>
-                        <form onSubmit={handleSubmit}>
-                          <select
+                        <form
+                          onSubmit={handleSubmit}
+                          className="grid grid-cols-3"
+                        >
+                          <Select
                             value={newEvent.paciente_id ?? ""}
                             onChange={(e) =>
                               setNewEvent({
@@ -332,6 +371,7 @@ export default function Disponibilidade() {
                               })
                             }
                             required
+                            className="justify-self-start"
                           >
                             <option value="">Selecione o paciente</option>
                             {pacientes.map((p) => (
@@ -339,9 +379,9 @@ export default function Disponibilidade() {
                                 {p.nome_completo}
                               </option>
                             ))}
-                          </select>
+                          </Select>
 
-                          <select
+                          <Select
                             value={newEvent.fisioterapeuta_id ?? ""}
                             onChange={(e) =>
                               setNewEvent({
@@ -350,6 +390,7 @@ export default function Disponibilidade() {
                               })
                             }
                             required
+                            className="justify-self-start"
                           >
                             <option value="">Selecione o fisioterapeuta</option>
                             {fisioterapeutas.map((f) => (
@@ -357,9 +398,9 @@ export default function Disponibilidade() {
                                 {f.nome_completo}
                               </option>
                             ))}
-                          </select>
+                          </Select>
 
-                          <select
+                          <Select
                             value={newEvent.horario_id ?? ""}
                             onChange={(e) =>
                               setNewEvent({
@@ -368,6 +409,7 @@ export default function Disponibilidade() {
                               })
                             }
                             required
+                            className="justify-self-start"
                           >
                             <option value="">Selecione o horário</option>
                             {horarios.map((h) => (
@@ -375,10 +417,12 @@ export default function Disponibilidade() {
                                 {h.horario}
                               </option>
                             ))}
-                          </select>
+                          </Select>
 
                           {/* outros campos, como data, status, etc */}
-                          <button type="submit">Criar</button>
+                          <button type="submit" className="col-start-2">
+                            Criar
+                          </button>
                         </form>
                       </div>
                     </div>

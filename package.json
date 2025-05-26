@@ -14,7 +14,7 @@
     "@fullcalendar/interaction": "^6.1.17",
     "@fullcalendar/react": "^6.1.17",
     "@fullcalendar/timegrid": "^6.1.17",
-    "@headlessui/react": "^2.2.3",
+    "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/postcss": "^4.1.6",
     "autoprefixer": "^10.4.21",
