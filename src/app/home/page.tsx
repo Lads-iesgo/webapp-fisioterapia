@@ -89,6 +89,9 @@ export default function Disponibilidade() {
           fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
+          pacienteNome: pacienteNome,
+          fisioterapeutaNome: fisioterapeutaNome,
+          horario: horario?.horario || "",
         },
       };
     });
@@ -119,6 +122,51 @@ export default function Disponibilidade() {
                 start: "14:00",
                 end: "16:00",
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
+              }}
+              eventDidMount={(info) => {
+                // Cria um elemento tooltip personalizado
+                const tooltip = document.createElement("div");
+                tooltip.className = "fc-event-tooltip";
+                tooltip.innerHTML = `
+                  <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
+                    <p><strong>Paciente:</strong> ${
+                      info.event.extendedProps.pacienteNome || "Não informado"
+                    }</p>
+                    <p><strong>Fisioterapeuta:</strong> ${
+                      info.event.extendedProps.fisioterapeutaNome ||
+                      "Não informado"
+                    }</p>
+                    <p><strong>Horário:</strong> ${
+                      info.event.extendedProps.horario || "Não informado"
+                    }</p>
+                    <p><strong>Status:</strong> ${
+                      info.event.extendedProps.status || "Não informado"
+                    }</p>
+                  </div>
+                `;
+                tooltip.style.position = "absolute";
+                tooltip.style.zIndex = "10000";
+                tooltip.style.display = "none";
+
+                document.body.appendChild(tooltip);
+
+                // Mostra o tooltip no hover
+                info.el.addEventListener("mouseenter", () => {
+                  const rect = info.el.getBoundingClientRect();
+                  tooltip.style.left = rect.right + 5 + "px";
+                  tooltip.style.top = rect.top + "px";
+                  tooltip.style.display = "block";
+                });
+
+                // Esconde o tooltip quando o mouse sai
+                info.el.addEventListener("mouseleave", () => {
+                  tooltip.style.display = "none";
+                });
+
+                // Remove o tooltip quando o evento é desmontado
+                return () => {
+                  document.body.removeChild(tooltip);
+                };
               }}
               height={600}
               expandRows={true}

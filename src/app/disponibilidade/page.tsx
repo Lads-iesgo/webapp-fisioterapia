@@ -76,10 +76,13 @@ export default function Disponibilidade() {
       // Opcional: Exibir mensagem de sucesso
       alert("Consulta agendada com sucesso!");
     } catch (error) {
-      console.error("Erro ao salvar consulta:", error);
-      alert(
-        "Erro ao agendar consulta. Verifique o console para mais detalhes."
-      );
+      if (error instanceof Error) {
+        console.error("Erro ao excluir consulta:", error.message);
+        alert(`Erro ao excluir consulta: ${error.message}`);
+      } else {
+        console.error("Erro desconhecido:", error);
+        alert("Erro desconhecido ao excluir consulta");
+      }
     }
   };
 
@@ -310,7 +313,7 @@ export default function Disponibilidade() {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              <div className="fixed inset-0 backdrop-blur-xs transition-opacity" />
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -348,12 +351,12 @@ export default function Disponibilidade() {
                           </Dialog.Title>
                           <div className="mt-2">
                             <p className="text-sm text-gray-500">
-                              Deseja excluir a consulta de {" "}
+                              Deseja excluir a consulta de{" "}
                               <strong>
                                 {eventToDelete?.pacienteNome ||
                                   "paciente não identificado"}
-                              </strong>
-                              {" "} com {" "}
+                              </strong>{" "}
+                              com{" "}
                               <strong>
                                 {eventToDelete?.fisioterapeutaNome}
                               </strong>{" "}
@@ -398,7 +401,7 @@ export default function Disponibilidade() {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              <div className="fixed inset-0 backdrop-blur-xs transition-opacity" />
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -429,69 +432,92 @@ export default function Disponibilidade() {
                         </Dialog.Title>
                         <form
                           onSubmit={handleSubmit}
-                          className="grid grid-cols-3"
+                          className="mt-4 flex flex-col space-y-4 w-full"
                         >
-                          <Select
-                            value={newEvent.paciente_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                paciente_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o paciente</option>
-                            {pacientes.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.nome_completo}
-                              </option>
-                            ))}
-                          </Select>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Paciente
+                              </label>
+                              <Select
+                                value={newEvent.paciente_id ?? ""}
+                                onChange={(e) =>
+                                  setNewEvent({
+                                    ...newEvent,
+                                    paciente_id: Number(e.target.value),
+                                  })
+                                }
+                                required
+                                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base select-custom"
+                              >
+                                <option value="">Selecione o paciente</option>
+                                {pacientes.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.nome_completo}
+                                  </option>
+                                ))}
+                              </Select>
+                            </div>
 
-                          <Select
-                            value={newEvent.fisioterapeuta_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                fisioterapeuta_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o fisioterapeuta</option>
-                            {fisioterapeutas.map((f) => (
-                              <option key={f.id} value={f.id}>
-                                {f.nome_completo}
-                              </option>
-                            ))}
-                          </Select>
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Fisioterapeuta
+                              </label>
+                              <Select
+                                value={newEvent.fisioterapeuta_id ?? ""}
+                                onChange={(e) =>
+                                  setNewEvent({
+                                    ...newEvent,
+                                    fisioterapeuta_id: Number(e.target.value),
+                                  })
+                                }
+                                required
+                                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base select-custom"
+                              >
+                                <option value="">
+                                  Selecione o fisioterapeuta
+                                </option>
+                                {fisioterapeutas.map((f) => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.nome_completo}
+                                  </option>
+                                ))}
+                              </Select>
+                            </div>
 
-                          <Select
-                            value={newEvent.horario_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                horario_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o horário</option>
-                            {horarios.map((h) => (
-                              <option key={h.id} value={h.id}>
-                                {h.horario}
-                              </option>
-                            ))}
-                          </Select>
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Horário
+                              </label>
+                              <Select
+                                value={newEvent.horario_id ?? ""}
+                                onChange={(e) =>
+                                  setNewEvent({
+                                    ...newEvent,
+                                    horario_id: Number(e.target.value),
+                                  })
+                                }
+                                required
+                                className="w-full rounded-md border border-gray-300 px-4 py-3 pr-8 text-base select-custom"
+                              >
+                                <option value="">Selecione o horário</option>
+                                {horarios.map((h) => (
+                                  <option key={h.id} value={h.id}>
+                                    {h.horario}
+                                  </option>
+                                ))}
+                              </Select>
+                            </div>
+                          </div>
 
-                          {/* outros campos, como data, status, etc */}
-                          <button type="submit" className="col-start-2">
-                            Criar
-                          </button>
+                          <div className="mt-5 flex justify-center">
+                            <button
+                              type="submit"
+                              className="inline-flex justify-center rounded-md bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
+                            >
+                              Criar
+                            </button>
+                          </div>
                         </form>
                       </div>
                     </div>
