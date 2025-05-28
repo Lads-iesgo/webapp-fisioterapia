@@ -7,7 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/pt-br";
-import { EventInput } from "@fullcalendar/core";
+import { EventInput, EventClickArg } from "@fullcalendar/core";
 
 import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition, Select } from "@headlessui/react";
@@ -134,13 +134,13 @@ export default function Disponibilidade() {
     }
   };
 
-  function handleDeleteModal(data: { event: any }) {
+  function handleDeleteModal(data: EventClickArg) {
     setShowDeleteModal(true);
     setEventToDelete({
       id: Number(data.event.id),
-      pacienteNome: data.event.extendedProps.pacienteNome,
-      fisioterapeutaNome: data.event.extendedProps.fisioterapeutaNome,
-      horario: data.event.extendedProps.horario,
+      pacienteNome: data.event.extendedProps?.pacienteNome,
+      fisioterapeutaNome: data.event.extendedProps?.fisioterapeutaNome,
+      horario: data.event.extendedProps?.horario,
     });
   }
 
@@ -203,8 +203,12 @@ export default function Disponibilidade() {
   });
 
   // Função de validação
-  function validateField(field: string, value: any) {
-    if (!value) {
+  function validateField(
+    field: string,
+    value: string | number | null | undefined
+  ): string {
+    if (!value && value !== 0) {
+      // Permitir o valor 0 como válido para campos numéricos
       return `Este campo é obrigatório`;
     }
     return "";
