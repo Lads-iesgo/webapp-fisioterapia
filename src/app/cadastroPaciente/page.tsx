@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AxiosError } from "axios";
+
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
@@ -153,7 +155,7 @@ export default function CadastrarPaciente() {
         endereco: `${form.endereco}, ${form.numero}, ${form.bairro}, ${form.cidade}`,
       };
 
-      const response = await api.post("/paciente", dadosPaciente);
+      await api.post("/paciente", dadosPaciente);
 
       setForm({
         nome: "",
@@ -174,11 +176,14 @@ export default function CadastrarPaciente() {
         tipo: "sucesso",
         texto: `Paciente cadastrado com sucesso! Nome: ${dadosPaciente.nome_completo}, CPF: ${dadosPaciente.cpf}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // Tipagem correta para erros do Axios
+      const axiosError = error as AxiosError<{ message: string }>;
+
       setMensagem({
         tipo: "erro",
         texto:
-          error?.response?.data?.message ||
+          axiosError.response?.data?.message ||
           "Erro ao cadastrar paciente. Verifique os dados e tente novamente.",
       });
     } finally {
@@ -189,15 +194,15 @@ export default function CadastrarPaciente() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
-      <div className="ml-72"> {/* Margem à esquerda para o NavBar */}
+      <div className="ml-72">
+        {" "}
+        {/* Margem à esquerda para o NavBar */}
         <TopBar title="Cadastrar Paciente" />
-        {/* Aqui é onde ajustamos a margem, removendo o mt-40 */}
-        <main className="pt-24 px-4 md:px-8 pb-8">
+        <main className="pt-24 px-4 md:px-8 mt-14 pb-8">
           <div className="max-w-4xl mx-auto overflow-hidden rounded-[20px] shadow-lg">
             {/* Header azul escuro sem bordas arredondadas no topo */}
-            <div className="bg-blue-900 h-12 w-full"></div>
-            
-            {/* O restante do formulário permanece idêntico */}
+            <div className="bg-blue-900 h-10 w-full"></div>
+
             <form
               onSubmit={handleSubmit}
               className="border border-gray-200 bg-white px-4 sm:px-6 md:px-8 py-6 rounded-b-[20px]"
