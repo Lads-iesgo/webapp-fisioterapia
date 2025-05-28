@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
+
 import NavBar from "../components/navBar"; // Importa de src/app/components/navBar.tsx
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
@@ -75,22 +77,28 @@ export default function PaginaCadastrarConsulta() {
         data_consulta: data,
         horario_id: Number(horario),
       });
+
       setMensagem({
         tipo: "sucesso",
         texto: `Consulta cadastrada com sucesso!
-        Paciente: ${getNomePaciente(paciente)}
-        Fisioterapeuta: ${getNomeFisioterapeuta(fisioterapeuta)}
-        Data: ${formatarData(data)}
-        Horário: ${getHorarioTexto(horario)}`,
+    Paciente: ${getNomePaciente(paciente)}
+    Fisioterapeuta: ${getNomeFisioterapeuta(fisioterapeuta)}
+    Data: ${formatarData(data)}
+    Horário: ${getHorarioTexto(horario)}`,
       });
+
       setPaciente("");
       setFisioterapeuta("");
       setData("");
       setHorario("");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // Verificação de tipo para o erro do Axios
+      const axiosError = error as AxiosError<{ message: string }>;
+
       setMensagem({
         tipo: "erro",
-        texto: error?.response?.data?.message || "Erro ao cadastrar consulta.",
+        texto:
+          axiosError.response?.data?.message || "Erro ao cadastrar consulta.",
       });
     } finally {
       setLoading(false);

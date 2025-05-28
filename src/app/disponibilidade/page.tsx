@@ -45,6 +45,33 @@ export default function Disponibilidade() {
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
 
+  // Adicione esses estados ao início do componente
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+    show: boolean;
+  }>({
+    type: "success",
+    message: "",
+    show: false,
+  });
+
+  function showNotification(
+    type: "success" | "error" | "warning",
+    message: string
+  ) {
+    setNotification({
+      type,
+      message,
+      show: true,
+    });
+
+    // Ocultar automaticamente após 5 segundos
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, show: false }));
+    }, 5000);
+  }
+
   function handleDateClick(arg: { date: Date }) {
     setNewEvent({ ...newEvent, start: arg.date, id: new Date().getTime() });
     setShowModal(true);
@@ -63,6 +90,27 @@ export default function Disponibilidade() {
       status: newEvent.status ?? "agendada",
     };
 
+    // Valida todos os campos antes de enviar
+    const pacienteError = validateField("paciente_id", newEvent.paciente_id);
+    const fisioterapeutaError = validateField(
+      "fisioterapeuta_id",
+      newEvent.fisioterapeuta_id
+    );
+    const horarioError = validateField("horario_id", newEvent.horario_id);
+
+    if (pacienteError || fisioterapeutaError || horarioError) {
+      setFormErrors({
+        paciente_id: pacienteError,
+        fisioterapeuta_id: fisioterapeutaError,
+        horario_id: horarioError,
+      });
+      showNotification(
+        "warning",
+        "Por favor, preencha todos os campos obrigatórios."
+      );
+      return;
+    }
+
     try {
       const response = await api.post("/consulta", novaConsulta);
       console.log("Consulta salva:", response.data);
@@ -73,15 +121,15 @@ export default function Disponibilidade() {
       // Fecha o modal após salvar
       handleCloseModal();
 
-      // Opcional: Exibir mensagem de sucesso
-      alert("Consulta agendada com sucesso!");
+      // Notificação de sucesso
+      showNotification("success", "Consulta agendada com sucesso!");
     } catch (error) {
       if (error instanceof Error) {
-        console.error("Erro ao excluir consulta:", error.message);
-        alert(`Erro ao excluir consulta: ${error.message}`);
+        console.error("Erro ao agendar consulta:", error.message);
+        showNotification("error", `Erro ao agendar consulta: ${error.message}`);
       } else {
         console.error("Erro desconhecido:", error);
-        alert("Erro desconhecido ao excluir consulta");
+        showNotification("error", "Erro desconhecido ao agendar consulta");
       }
     }
   };
@@ -98,7 +146,10 @@ export default function Disponibilidade() {
 
   async function handleDelete() {
     if (!eventToDelete || !eventToDelete.id) {
-      alert("Não foi possível identificar a consulta para exclusão.");
+      showNotification(
+        "error",
+        "Não foi possível identificar a consulta para exclusão."
+      );
       return;
     }
 
@@ -116,11 +167,15 @@ export default function Disponibilidade() {
       setEventToDelete(null);
 
       // Feedback para o usuário
-      alert(`Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`);
+      showNotification(
+        "success",
+        `Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`
+      );
     } catch (error) {
       console.error("Erro ao excluir consulta:", error);
-      alert(
-        "Erro ao excluir consulta. Verifique o console para mais detalhes."
+      showNotification(
+        "error",
+        "Erro ao excluir consulta. Tente novamente mais tarde."
       );
     }
   }
@@ -138,6 +193,21 @@ export default function Disponibilidade() {
     });
     setShowDeleteModal(false);
     setEventToDelete(null);
+  }
+
+  // Adicione este estado
+  const [formErrors, setFormErrors] = useState({
+    paciente_id: "",
+    fisioterapeuta_id: "",
+    horario_id: "",
+  });
+
+  // Função de validação
+  function validateField(field: string, value: any) {
+    if (!value) {
+      return `Este campo é obrigatório`;
+    }
+    return "";
   }
 
   useEffect(() => {
@@ -212,6 +282,72 @@ export default function Disponibilidade() {
 
   return (
     <>
+      {/* Sistema de notificações */}
+      <div
+        className={`fixed top-24 right-8 max-w-sm p-4 rounded-md shadow-lg transition-all duration-300 ${
+          notification.show
+            ? "opacity-100 transform translate-y-0"
+            : "opacity-0 transform -translate-y-4"
+        } ${
+          notification.type === "success"
+            ? "bg-green-50 text-green-800 border-l-4 border-green-500"
+            : notification.type === "error"
+            ? "bg-red-50 text-red-800 border-l-4 border-red-500"
+            : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"
+        }`}
+        style={{
+          zIndex: 9999,
+          pointerEvents: notification.show ? "auto" : "none",
+        }}
+      >
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            {notification.type === "success" ? (
+              <CheckIcon className="h-5 w-5 text-green-500" />
+            ) : notification.type === "error" ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+            ) : (
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+            )}
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium">{notification.message}</p>
+          </div>
+          <div className="ml-auto pl-3">
+            <div className="-mx-1.5 -my-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  setNotification((prev) => ({ ...prev, show: false }))
+                }
+                className={`inline-flex rounded-md p-1.5 ${
+                  notification.type === "success"
+                    ? "text-green-500 hover:bg-green-100"
+                    : notification.type === "error"
+                    ? "text-red-500 hover:bg-red-100"
+                    : "text-yellow-500 hover:bg-yellow-100"
+                }`}
+              >
+                <span className="sr-only">Fechar</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <NavBar />
       <TopBar title="Disponibilidade" />
 
@@ -441,14 +577,26 @@ export default function Disponibilidade() {
                               </label>
                               <Select
                                 value={newEvent.paciente_id ?? ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
                                   setNewEvent({
                                     ...newEvent,
-                                    paciente_id: Number(e.target.value),
-                                  })
-                                }
+                                    paciente_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    paciente_id: validateField(
+                                      "paciente_id",
+                                      value
+                                    ),
+                                  });
+                                }}
                                 required
-                                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base select-custom"
+                                className={`w-full rounded-md border ${
+                                  formErrors.paciente_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
                               >
                                 <option value="">Selecione o paciente</option>
                                 {pacientes.map((p) => (
@@ -457,22 +605,39 @@ export default function Disponibilidade() {
                                   </option>
                                 ))}
                               </Select>
+                              {formErrors.paciente_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.paciente_id}
+                                </p>
+                              )}
                             </div>
-
+                            {/* Para o campo de fisioterapeuta */}
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Fisioterapeuta
                               </label>
                               <Select
                                 value={newEvent.fisioterapeuta_id ?? ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
                                   setNewEvent({
                                     ...newEvent,
-                                    fisioterapeuta_id: Number(e.target.value),
-                                  })
-                                }
+                                    fisioterapeuta_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    fisioterapeuta_id: validateField(
+                                      "fisioterapeuta_id",
+                                      value
+                                    ),
+                                  });
+                                }}
                                 required
-                                className="w-full rounded-md border border-gray-300 px-4 py-3 text-base select-custom"
+                                className={`w-full rounded-md border ${
+                                  formErrors.fisioterapeuta_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
                               >
                                 <option value="">
                                   Selecione o fisioterapeuta
@@ -483,22 +648,39 @@ export default function Disponibilidade() {
                                   </option>
                                 ))}
                               </Select>
+                              {formErrors.fisioterapeuta_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.fisioterapeuta_id}
+                                </p>
+                              )}
                             </div>
-
+                            {/* Para o campo de horário */}
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Horário
                               </label>
                               <Select
                                 value={newEvent.horario_id ?? ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
                                   setNewEvent({
                                     ...newEvent,
-                                    horario_id: Number(e.target.value),
-                                  })
-                                }
+                                    horario_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    horario_id: validateField(
+                                      "horario_id",
+                                      value
+                                    ),
+                                  });
+                                }}
                                 required
-                                className="w-full rounded-md border border-gray-300 px-4 py-3 pr-8 text-base select-custom"
+                                className={`w-full rounded-md border ${
+                                  formErrors.horario_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
                               >
                                 <option value="">Selecione o horário</option>
                                 {horarios.map((h) => (
@@ -507,10 +689,22 @@ export default function Disponibilidade() {
                                   </option>
                                 ))}
                               </Select>
+                              {formErrors.horario_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.horario_id}
+                                </p>
+                              )}
                             </div>
                           </div>
 
-                          <div className="mt-5 flex justify-center">
+                          <div className="mt-5 flex justify-center space-x-4">
+                            <button
+                              type="button"
+                              className="inline-flex justify-center rounded-md bg-gray-300 px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-400"
+                              onClick={() => setShowModal(false)}
+                            >
+                              Voltar
+                            </button>
                             <button
                               type="submit"
                               className="inline-flex justify-center rounded-md bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
