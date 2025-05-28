@@ -115,104 +115,108 @@ export default function PaginaCadastrarConsulta() {
       <div className="flex flex-col flex-1">
         <TopBar title="Cadastrar Consulta" />
         <main className="flex flex-1 items-center justify-center p-4 overflow-y-auto bg-gray-100">
-          <div className="bg-white p-8 w-full max-w-lg mt-24 rounded-lg shadow-sm">
-            <form onSubmit={handleSalvar} className="flex flex-col gap-6">
-              <label className="flex flex-col">
-                <span className="text-blue-900 font-semibold mb-2">
-                  Paciente
-                </span>
-                <select
-                  required
-                  value={paciente}
-                  onChange={(e) => setPaciente(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                >
-                  <option value="" disabled>
-                    Selecione o paciente
-                  </option>
-                  {pacientes.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome_completo}
+          <div className="bg-white w-full max-w-lg mt-16 rounded-[20px] shadow-sm overflow-hidden">
+            <div className="bg-blue-900 h-10 w-full"></div>
+            {/* Container para o conteúdo do formulário com padding */}
+            <div className="p-8">
+              <form onSubmit={handleSalvar} className="flex flex-col gap-6">
+                <label className="flex flex-col">
+                  <span className="text-blue-900 font-semibold mb-2">
+                    Paciente
+                  </span>
+                  <select
+                    required
+                    value={paciente}
+                    onChange={(e) => setPaciente(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                  >
+                    <option value="" disabled>
+                      Selecione o paciente
                     </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col">
-                <span className="text-blue-900 font-semibold mb-2">
-                  Fisioterapeuta
-                </span>
-                <select
-                  required
-                  value={fisioterapeuta}
-                  onChange={(e) => setFisioterapeuta(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                >
-                  <option value="" disabled>
-                    Selecione o fisioterapeuta
-                  </option>
-                  {fisioterapeutas.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.nome_completo}
+                    {pacientes.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nome_completo}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col">
+                  <span className="text-blue-900 font-semibold mb-2">
+                    Fisioterapeuta
+                  </span>
+                  <select
+                    required
+                    value={fisioterapeuta}
+                    onChange={(e) => setFisioterapeuta(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                  >
+                    <option value="" disabled>
+                      Selecione o fisioterapeuta
                     </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col">
-                <span className="text-blue-900 font-semibold mb-2">Data</span>
-                <input
-                  required
-                  type="date"
-                  value={data}
-                  onChange={(e) => setData(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                />
-              </label>
-              <label className="flex flex-col">
-                <span className="text-blue-900 font-semibold mb-2">
-                  Horário
-                </span>
-                <select
-                  required
-                  value={horario}
-                  onChange={(e) => setHorario(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                >
-                  <option value="" disabled>
-                    Selecione o horário
-                  </option>
-                  {horarios.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.horario.slice(0, 5)}
+                    {fisioterapeutas.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.nome_completo}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col">
+                  <span className="text-blue-900 font-semibold mb-2">Data</span>
+                  <input
+                    required
+                    type="date"
+                    value={data}
+                    onChange={(e) => setData(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                  />
+                </label>
+                <label className="flex flex-col">
+                  <span className="text-blue-900 font-semibold mb-2">
+                    Horário
+                  </span>
+                  <select
+                    required
+                    value={horario}
+                    onChange={(e) => setHorario(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                  >
+                    <option value="" disabled>
+                      Selecione o horário
                     </option>
-                  ))}
-                </select>
-              </label>
-              {mensagem && (
-                <div
-                  className={`whitespace-pre-line text-center font-semibold rounded p-3 mt-2 ${
-                    mensagem.tipo === "sucesso"
-                      ? "bg-green-100 text-green-800 border border-green-300"
-                      : "bg-red-100 text-red-800 border border-red-300"
-                  }`}
-                >
-                  {mensagem.texto}
+                    {horarios.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.horario.slice(0, 5)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {mensagem && (
+                  <div
+                    className={`whitespace-pre-line text-center font-semibold rounded p-3 mt-2 ${
+                      mensagem.tipo === "sucesso"
+                        ? "bg-green-100 text-green-800 border border-green-300"
+                        : "bg-red-100 text-red-800 border border-red-300"
+                    }`}
+                  >
+                    {mensagem.texto}
+                  </div>
+                )}
+                <div className="flex justify-between mt-8">
+                  <Button
+                    text="Voltar"
+                    onClick={handleVoltar}
+                    variant="secondary"
+                    type="button"
+                  />
+                  <Button
+                    text={loading ? "Salvando..." : "Salvar"}
+                    onClick={() => {}}
+                    variant="primary"
+                    type="submit"
+                  />
                 </div>
-              )}
-              <div className="flex justify-between mt-8">
-                <Button
-                  text="Voltar"
-                  onClick={handleVoltar}
-                  variant="secondary"
-                  type="button"
-                />
-                <Button
-                  text={loading ? "Salvando..." : "Salvar"}
-                  onClick={() => {}}
-                  variant="primary"
-                  type="submit"
-                />
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </main>
       </div>

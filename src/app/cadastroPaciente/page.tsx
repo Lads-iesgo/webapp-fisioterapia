@@ -155,7 +155,7 @@ export default function CadastrarPaciente() {
         endereco: `${form.endereco}, ${form.numero}, ${form.bairro}, ${form.cidade}`,
       };
 
-      const response = await api.post("/paciente", dadosPaciente);
+      await api.post("/paciente", dadosPaciente);
 
       setForm({
         nome: "",
@@ -198,13 +198,11 @@ export default function CadastrarPaciente() {
         {" "}
         {/* Margem à esquerda para o NavBar */}
         <TopBar title="Cadastrar Paciente" />
-        {/* Aqui é onde ajustamos a margem, removendo o mt-40 */}
-        <main className="pt-24 px-4 md:px-8 pb-8">
+        <main className="pt-24 px-4 md:px-8 mt-14 pb-8">
           <div className="max-w-4xl mx-auto overflow-hidden rounded-[20px] shadow-lg">
             {/* Header azul escuro sem bordas arredondadas no topo */}
-            <div className="bg-blue-900 h-12 w-full"></div>
+            <div className="bg-blue-900 h-10 w-full"></div>
 
-            {/* O restante do formulário permanece idêntico */}
             <form
               onSubmit={handleSubmit}
               className="border border-gray-200 bg-white px-4 sm:px-6 md:px-8 py-6 rounded-b-[20px]"
