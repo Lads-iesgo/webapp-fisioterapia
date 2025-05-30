@@ -6,17 +6,19 @@ import Image from "next/image";
 import Link from "next/link";
 import Button from "../components/button";
 import api from "../services/api";
+import { useNotification } from "../components/Notification";
 
 import logo from "../../../public/logo-iesgo.png";
 
 export default function Login() {
   const router = useRouter();
+  const { showNotification } = useNotification();
+  
   const [credentials, setCredentials] = useState({
     email: "",
     senha: "",
   });
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -25,22 +27,25 @@ export default function Login() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErro("");
     setLoading(true);
 
     try {
       const response = await api.post("/auth/login", credentials);
       
-      // Aqui você pode armazenar o token em localStorage ou cookies
+      // Armazenar o token em localStorage
       localStorage.setItem("token", response.data.token);
       
-      // Redireciona para a página home
+      // Armazenar flag indicando login bem-sucedido para a Home mostrar notificação
+      sessionStorage.setItem("loginSuccess", "true");
+      
+      // Redireciona para a página home sem mostrar notificação aqui
       router.push("/home");
     } catch (error: any) {
-      setErro(
-        error?.response?.data?.message || 
-        "Não foi possível fazer login. Verifique suas credenciais."
-      );
+      // Continua mostrando notificação de erro aqui
+      const errorMessage = error?.response?.data?.message || 
+        "Não foi possível fazer login. Verifique suas credenciais.";
+      
+      showNotification("error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -102,13 +107,6 @@ export default function Login() {
                 required
               />
             </div>
-            
-            {/* Mensagem de erro */}
-            {erro && (
-              <div className="text-center font-semibold rounded-[5px] p-3 bg-red-100 text-red-800 border border-red-300">
-                {erro}
-              </div>
-            )}
             
             {/* Link para recuperação de senha */}
             <div className="text-right">
