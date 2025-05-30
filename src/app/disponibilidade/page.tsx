@@ -385,9 +385,6 @@ export default function Disponibilidade() {
                     <p><strong>Horário:</strong> ${
                       info.event.extendedProps.horario || "Não informado"
                     }</p>
-                    <p><strong>Status:</strong> ${
-                      info.event.extendedProps.status || "Não informado"
-                    }</p>
                   </div>
                 `;
                 tooltip.style.position = "absolute";
@@ -396,12 +393,46 @@ export default function Disponibilidade() {
 
                 document.body.appendChild(tooltip);
 
-                // Mostra o tooltip no hover
+                // Mostra o tooltip no hover com verificação de posição
                 info.el.addEventListener("mouseenter", () => {
                   const rect = info.el.getBoundingClientRect();
-                  tooltip.style.left = rect.right + 5 + "px";
-                  tooltip.style.top = rect.top + "px";
+
+                  // Define tooltip como visível mas fora da tela para poder calcular dimensões
                   tooltip.style.display = "block";
+                  tooltip.style.left = "-9999px";
+                  tooltip.style.top = "-9999px";
+
+                  // Obtém as dimensões do tooltip
+                  const tooltipRect = tooltip.getBoundingClientRect();
+                  const tooltipWidth = tooltipRect.width;
+                  const tooltipHeight = tooltipRect.height;
+
+                  // Verifica espaço à direita
+                  const spaceRight = window.innerWidth - rect.right;
+                  // Verifica espaço abaixo
+                  const spaceBottom = window.innerHeight - rect.top;
+
+                  // Posicionamento horizontal
+                  if (spaceRight >= tooltipWidth + 10) {
+                    // Suficiente espaço à direita
+                    tooltip.style.left = rect.right + 10 + "px";
+                  } else {
+                    // Não há espaço à direita, posicionar à esquerda
+                    tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
+                  }
+
+                  // Posicionamento vertical
+                  if (spaceBottom >= tooltipHeight + 10) {
+                    // Suficiente espaço abaixo
+                    tooltip.style.top = rect.top + "px";
+                  } else {
+                    // Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
+                    const topPosition = Math.max(
+                      10,
+                      rect.bottom - tooltipHeight
+                    );
+                    tooltip.style.top = topPosition + "px";
+                  }
                 });
 
                 // Esconde o tooltip quando o mouse sai
@@ -413,7 +444,7 @@ export default function Disponibilidade() {
                 return () => {
                   document.body.removeChild(tooltip);
                 };
-              }}
+              }}
               selectable={true}
               selectMirror={true}
               locale={esLocale}
