@@ -37,10 +37,29 @@ export default function Home() {
     const loginSuccess = sessionStorage.getItem("loginSuccess");
     
     if (loginSuccess === "true") {
-      // Mostrar notificação de login bem-sucedido
-      showNotification("success", "Login realizado com sucesso! Bem-vindo(a)!");
+      // Buscar dados do usuário no localStorage
+      const userDataString = localStorage.getItem("userData");
+      let perfilUsuario = "";
+      let nomeUsuario = "";
       
-      // Remover a flag para não mostrar a notificação novamente se a página for recarregada
+      if (userDataString) {
+        try {
+          const userData = JSON.parse(userDataString);
+          perfilUsuario = userData.perfil || "";
+          nomeUsuario = userData.nome || "";
+        } catch (e) {
+          console.error("Erro ao analisar dados do usuário:", e);
+        }
+      }
+      
+      // Mostrar notificação de login bem-sucedido com o perfil
+      const mensagemBoasVindas = perfilUsuario 
+        ? `Login realizado com sucesso! Bem-vindo ${perfilUsuario}!` 
+        : "Login realizado com sucesso! Bem-vindo(a)!";
+        
+      showNotification("success", mensagemBoasVindas);
+      
+      // Remover a flag para não mostrar a notificação novamente
       sessionStorage.removeItem("loginSuccess");
     }
   }, [showNotification]);
