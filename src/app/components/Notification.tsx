@@ -5,6 +5,9 @@ import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
 type NotificationType = "success" | "error" | "warning";
 
+// Constante para o tempo padrão de exibição da notificação
+const DEFAULT_NOTIFICATION_DURATION = 5000; // 5 segundos
+
 interface NotificationContextType {
   showNotification: (type: NotificationType, message: string, duration?: number) => void;
   hideNotification: () => void;
@@ -18,6 +21,7 @@ interface NotificationState {
   type: NotificationType;
   message: string;
   show: boolean;
+  duration: number; // Adicionar a duração ao estado
 }
 
 // Criar o contexto
@@ -29,33 +33,29 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     type: "success",
     message: "",
     show: false,
+    duration: DEFAULT_NOTIFICATION_DURATION, // Usar a constante
   });
 
   // Fechar automaticamente após um tempo
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     if (notification.show) {
+      // Usar a duração definida no estado da notificação
       timeoutId = setTimeout(() => {
         setNotification((prev) => ({ ...prev, show: false }));
-      }, 5000);
+      }, notification.duration); 
     }
     return () => clearTimeout(timeoutId);
-  }, [notification.show]);
+  }, [notification.show, notification.duration]); // Adicionar duration às dependências
 
   // Função para mostrar notificação
   const showNotification = (
     type: NotificationType, 
     message: string,
-    duration = 5000
+    duration: number = DEFAULT_NOTIFICATION_DURATION // Usar a constante como padrão
   ) => {
-    setNotification({ type, message, show: true });
-    
-    // Configura um timeout personalizado se fornecido
-    if (duration !== 5000) {
-      setTimeout(() => {
-        setNotification((prev) => ({ ...prev, show: false }));
-      }, duration);
-    }
+    // Definir a duração no estado ao mostrar a notificação
+    setNotification({ type, message, show: true, duration }); 
   };
 
   // Função para esconder notificação
@@ -67,7 +67,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     <NotificationContext.Provider value={{ showNotification, hideNotification }}>
       {children}
       
-      {/* Componente de notificação */}
+      {/* Componente de notificação (sem alterações aqui) */}
       <div
         className={`fixed top-24 right-8 max-w-sm p-4 rounded-md shadow-lg transition-all duration-300 ${
           notification.show
