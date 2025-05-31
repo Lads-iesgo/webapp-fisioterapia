@@ -1,5 +1,6 @@
 "use client";
 
+import { useCookies } from 'next-client-cookies'; // Alterar esta importação
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -13,6 +14,7 @@ import logo from "../../../public/logo-iesgo.png";
 export default function Login() {
   const router = useRouter();
   const { showNotification } = useNotification();
+  const cookies = useCookies(); // Usar hook em vez de factory function
   
   const [credentials, setCredentials] = useState({
     email: "",
@@ -32,8 +34,21 @@ export default function Login() {
     try {
       const response = await api.post("/auth/login", credentials);
       
-      // Armazenar o token em localStorage
-      localStorage.setItem("token", response.data.token);
+      // Armazenar o token no cookies
+      cookies.set('token', response.data.token, { 
+        expires: 1, // expira em 1 dias
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+      
+      // Salvar informações do usuário no localStorage
+      if (response.data.user) {
+        localStorage.setItem("userData", JSON.stringify({
+          email: response.data.user.email,
+          nome: response.data.user.nome,
+          perfil: response.data.user.perfil
+        }));
+      }
       
       // Armazenar flag indicando login bem-sucedido para a Home mostrar notificação
       sessionStorage.setItem("loginSuccess", "true");
