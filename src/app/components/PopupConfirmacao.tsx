@@ -1,6 +1,8 @@
+//Imortações necessárias
 import React from "react";
 import Image from "next/image";
 
+//Definindo a interface PopupConfirmacaoProps para as propriedades do componente
 interface PopupConfirmacaoProps {
   aberto: boolean;
   titulo: string;
@@ -9,6 +11,7 @@ interface PopupConfirmacaoProps {
   aoFechar: () => void;
 }
 
+//Componente PopupConfirmacao que exibe um popup de confirmação
 export default function PopupConfirmacao({
   aberto,
   titulo,
@@ -16,6 +19,7 @@ export default function PopupConfirmacao({
   textoBotao = "OK",
   aoFechar,
 }: PopupConfirmacaoProps) {
+  //Se o popup não estiver aberto, retorna null para não renderizar nada
   if (!aberto) return null;
 
   return (
