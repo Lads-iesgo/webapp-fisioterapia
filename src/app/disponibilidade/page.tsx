@@ -1,7 +1,9 @@
 "use client";
 
+//Importando a API
 import api from "@/app/services/api";
 
+//Importações necessárias
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -16,6 +18,7 @@ import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
+//Importação das tipagens necessárias
 import {
   Consulta,
   Evento,
@@ -25,13 +28,13 @@ import {
 } from "../interfaces/types";
 
 export default function Disponibilidade() {
+  //Definindo os estados para armazenar os dados
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [newEvent, setNewEvent] = useState<Evento>({
     title: 0,
     start: "",
   });
-  //const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<{
@@ -44,8 +47,6 @@ export default function Disponibilidade() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
-
-  // Adicione esses estados ao início do componente
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
     message: string;
@@ -56,6 +57,7 @@ export default function Disponibilidade() {
     show: false,
   });
 
+  //Função para exibir notificações
   function showNotification(
     type: "success" | "error" | "warning",
     message: string
@@ -72,11 +74,13 @@ export default function Disponibilidade() {
     }, 5000);
   }
 
+  //Função para lidar com o clique na data
   function handleDateClick(arg: { date: Date }) {
     setNewEvent({ ...newEvent, start: arg.date, id: new Date().getTime() });
     setShowModal(true);
   }
 
+  //Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const novaConsulta: Consulta = {
@@ -90,7 +94,7 @@ export default function Disponibilidade() {
       status: newEvent.status ?? "agendada",
     };
 
-    // Valida todos os campos antes de enviar
+    //Valida todos os campos antes de enviar
     const pacienteError = validateField("paciente_id", newEvent.paciente_id);
     const fisioterapeutaError = validateField(
       "fisioterapeuta_id",
@@ -112,16 +116,17 @@ export default function Disponibilidade() {
     }
 
     try {
+      //Chamada para a API para salvar a nova consulta
       const response = await api.post("/consulta", novaConsulta);
       console.log("Consulta salva:", response.data);
 
-      // Atualiza o estado com a nova consulta retornada pela API
+      //Atualiza o estado com a nova consulta retornada pela API
       setConsulta([...consulta, response.data]);
 
-      // Fecha o modal após salvar
+      //Fecha o modal após salvar
       handleCloseModal();
 
-      // Notificação de sucesso
+      //Notificação de sucesso
       showNotification("success", "Consulta agendada com sucesso!");
     } catch (error) {
       if (error instanceof Error) {
@@ -134,6 +139,7 @@ export default function Disponibilidade() {
     }
   };
 
+  //Função para lidar com a abertura do modal de exclusão
   function handleDeleteModal(data: EventClickArg) {
     setShowDeleteModal(true);
     setEventToDelete({
@@ -144,6 +150,7 @@ export default function Disponibilidade() {
     });
   }
 
+  //Função para lidar com a exclusão da consulta
   async function handleDelete() {
     if (!eventToDelete || !eventToDelete.id) {
       showNotification(
@@ -154,19 +161,19 @@ export default function Disponibilidade() {
     }
 
     try {
-      // Chamada para a API para excluir a consulta
+      //Chamada para a API para excluir a consulta
       await api.delete(`/consulta/${eventToDelete.id}`);
 
-      // Atualiza o estado local removendo a consulta excluída
+      //Atualiza o estado local removendo a consulta excluída
       setConsulta(
         consulta.filter((item) => Number(item.id) !== eventToDelete.id)
       );
 
-      // Fecha o modal e reseta o estado
+      //Fecha o modal e reseta o estado
       setShowDeleteModal(false);
       setEventToDelete(null);
 
-      // Feedback para o usuário
+      //Feedback para o usuário
       showNotification(
         "success",
         `Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`
@@ -180,6 +187,7 @@ export default function Disponibilidade() {
     }
   }
 
+  //Função para fechar o modal e resetar o estado
   function handleCloseModal() {
     setShowModal(false);
     setNewEvent({
@@ -195,14 +203,14 @@ export default function Disponibilidade() {
     setEventToDelete(null);
   }
 
-  // Adicione este estado
+  //Adicione este estado
   const [formErrors, setFormErrors] = useState({
     paciente_id: "",
     fisioterapeuta_id: "",
     horario_id: "",
   });
 
-  // Função de validação
+  //Função de validação
   function validateField(
     field: string,
     value: string | number | null | undefined
@@ -214,6 +222,7 @@ export default function Disponibilidade() {
     return "";
   }
 
+  //Efeito para buscar as consultas ao carregar a página
   useEffect(() => {
     api
       .get<Consulta[]>("/consulta")
@@ -225,12 +234,14 @@ export default function Disponibilidade() {
       });
   }, []);
 
+  //Efeito para buscar pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {
     api.get("/paciente").then((res) => setPacientes(res.data));
     api.get("/usuario").then((res) => setFisioterapeutas(res.data));
     api.get("/horario").then((res) => setHorarios(res.data));
   }, []);
 
+  //Efeito para transformar as consultas em eventos do FullCalendar
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
@@ -265,6 +276,7 @@ export default function Disponibilidade() {
       const fisioterapeutaNome =
         fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
 
+      //Criação do evento
       return {
         id: String(item.id), // Convertendo para string para evitar erro de tipagem
         title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
@@ -355,22 +367,30 @@ export default function Disponibilidade() {
       <NavBar />
       <TopBar title="Disponibilidade" />
 
+      {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
           <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px]">
             <FullCalendar
+              //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              //Configuração do cabeçalho do calendário
               headerToolbar={{
                 start: "prev,next today",
                 center: "title",
                 end: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
+              //Tempo de duração do horário
               slotDuration={"01:00:00"}
+              //Calendário com eventos
               events={events}
+              //Indica o horário atual
               nowIndicator={true}
+              //Permite interação com o calendário
               editable={true}
+              //Configuração do tooltip
               eventDidMount={(info) => {
-                // Cria um elemento tooltip personalizado
+                //Cria um elemento tooltip personalizado
                 const tooltip = document.createElement("div");
                 tooltip.className = "fc-event-tooltip";
                 tooltip.innerHTML = `
@@ -444,31 +464,46 @@ export default function Disponibilidade() {
                 return () => {
                   document.body.removeChild(tooltip);
                 };
-              }}
+              }}
+              //Permite selecionar eventos
               selectable={true}
+              //Permite selecionar múltiplos dias
               selectMirror={true}
+              //Configuração do idioma
               locale={esLocale}
+              //Configuração de visualização inicial
               initialView="dayGridMonth"
+              //Configuração de horários de trabalho
               businessHours={{
                 start: "14:00",
                 end: "16:00",
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
               }}
+              //Permite adicionar eventos ao clicar em uma data
               dateClick={handleDateClick}
+              //Permite editar eventos ao clicar
               eventClick={(data) => handleDeleteModal(data)}
+              //Configuração de altura do calendário
               height={600}
+              //Configuração de expansão de linhas
               expandRows={true}
+              //Configuração das datas do cabeçalho
               stickyHeaderDates={true}
+              //Configuração de eventos máximos do dia
               dayMaxEvents={true}
+              //Configuração de janela de redimensionamento
               handleWindowResize={true}
+              //Tempo de inicialização do calendário
               slotMinTime="14:00:00"
+              //Tempo de finalização do calendário
               slotMaxTime="17:00:00"
-              allDaySlot={false}
+              //Configuração de tempo de rolagem
               scrollTime="08:00:00"
             />
           </div>
         </div>
 
+        {/* Modal de excluir consulta */}
         <Transition.Root show={showDeleteModal} as={Fragment}>
           <Dialog
             as="div"
@@ -561,6 +596,7 @@ export default function Disponibilidade() {
             </div>
           </Dialog>
         </Transition.Root>
+        {/* Modal de adicionar nova consulta */}
         <Transition.Root show={showModal} as={Fragment}>
           <Dialog as="div" className="relative z-10" onClose={setShowModal}>
             <Transition.Child
@@ -610,6 +646,8 @@ export default function Disponibilidade() {
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Paciente
                               </label>
+                              {/* Importação dinâmica dos pacientes, dos
+                              fisioterapeutas e dos horários cadastrados */}
                               <Select
                                 value={newEvent.paciente_id ?? ""}
                                 onChange={(e) => {
@@ -646,7 +684,6 @@ export default function Disponibilidade() {
                                 </p>
                               )}
                             </div>
-                            {/* Para o campo de fisioterapeuta */}
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Fisioterapeuta
@@ -689,7 +726,6 @@ export default function Disponibilidade() {
                                 </p>
                               )}
                             </div>
-                            {/* Para o campo de horário */}
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Horário

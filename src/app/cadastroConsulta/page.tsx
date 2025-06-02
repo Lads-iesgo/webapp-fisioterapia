@@ -1,5 +1,6 @@
 "use client";
 
+//Importações necessárias
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 
@@ -8,22 +9,26 @@ import TopBar from "../components/topBar"; // Importa de src/app/components/topB
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
 import api from "../services/api";
 
+//Criação de interfaces para os Pacientes
 interface Paciente {
   id: number;
   nome_completo: string;
 }
 
+//Criação de interfaces para os Fisioterapeutas
 interface Fisioterapeuta {
   id: number;
   nome_completo: string;
 }
 
+//Criação de interfaces para os Horários
 interface Horario {
   id: number;
   horario: string;
 }
 
 export default function PaginaCadastrarConsulta() {
+  //Estados para armazenar os dados dos pacientes, fisioterapeutas e horários
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
@@ -38,6 +43,7 @@ export default function PaginaCadastrarConsulta() {
     texto: string;
   } | null>(null);
 
+  //Efeito para buscar os dados dos pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {
     api.get<Paciente[]>("/paciente").then((res) => setPacientes(res.data));
     api
@@ -46,31 +52,40 @@ export default function PaginaCadastrarConsulta() {
     api.get<Horario[]>("/horario").then((res) => setHorarios(res.data));
   }, []);
 
+  //Funções auxiliares para obter os nomes e horários
   function getNomePaciente(id: string) {
     return pacientes.find((p) => p.id === Number(id))?.nome_completo || "";
   }
+
+  //Função para obter o nome do fisioterapeuta
   function getNomeFisioterapeuta(id: string) {
     return (
       fisioterapeutas.find((f) => f.id === Number(id))?.nome_completo || ""
     );
   }
+
+  //Função para obter o horário formatado
   function getHorarioTexto(id: string) {
     return (
       horarios.find((h) => h.id === Number(id))?.horario?.slice(0, 5) || ""
     );
   }
+
+  //Função para formatar a data no formato DD/MM/AAAA
   function formatarData(dataISO: string) {
     if (!dataISO) return "";
     const [ano, mes, dia] = dataISO.split("-");
     return `${dia}/${mes}/${ano}`;
   }
 
+  //Função para lidar com o envio do formulário
   async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
 
     try {
+      // Verifica se todos os campos estão preenchidos
       await api.post("/consulta", {
         paciente_id: Number(paciente),
         fisioterapeuta_id: Number(fisioterapeuta),
@@ -87,12 +102,13 @@ export default function PaginaCadastrarConsulta() {
     Horário: ${getHorarioTexto(horario)}`,
       });
 
+      //Limpa os campos do formulário após o sucesso
       setPaciente("");
       setFisioterapeuta("");
       setData("");
       setHorario("");
     } catch (error: unknown) {
-      // Verificação de tipo para o erro do Axios
+      // erificação de tipo para o erro do Axios
       const axiosError = error as AxiosError<{ message: string }>;
 
       setMensagem({
@@ -105,6 +121,7 @@ export default function PaginaCadastrarConsulta() {
     }
   }
 
+  //Função para lidar com o botão Voltar
   function handleVoltar() {
     window.history.back();
   }
@@ -117,8 +134,8 @@ export default function PaginaCadastrarConsulta() {
         <main className="flex flex-1 items-center justify-center p-4 overflow-y-auto bg-gray-100">
           <div className="bg-white w-full max-w-lg mt-16 rounded-[20px] shadow-sm overflow-hidden">
             <div className="bg-blue-900 h-10 w-full"></div>
-            {/* Container para o conteúdo do formulário com padding */}
             <div className="p-8">
+              {/* Formulário para cadastro de consulta */}
               <form onSubmit={handleSalvar} className="flex flex-col gap-6">
                 <label className="flex flex-col">
                   <span className="text-blue-900 font-semibold mb-2">

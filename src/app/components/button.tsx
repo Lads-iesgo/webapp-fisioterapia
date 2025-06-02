@@ -1,7 +1,9 @@
 "use client";
 
+//Importnado React para criar componentes funcionais
 import React from "react";
 
+//Criando a interface ButtonProps para definir as propriedades do componente Button
 interface ButtonProps {
   text: string;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -11,6 +13,7 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
+//Criando o componente Button como um componente funcional do React
 const Button: React.FC<ButtonProps> = ({
   text,
   onClick,

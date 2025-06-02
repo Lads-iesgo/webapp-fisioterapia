@@ -1,5 +1,6 @@
 "use client";
 
+//Importações necessárias
 import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
 
@@ -8,13 +9,15 @@ import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
 
-// Interface para o tipo de perfil
+//Interface para o tipo de perfil
 interface Perfil {
   id: number;
   nome: string;
 }
 
+//Componente de cadastro de usuário
 export default function CadastroUsuario() {
+  //Estado do formulário e outras variáveis
   const [form, setForm] = useState({
     nome_completo: "",
     email: "",
@@ -32,7 +35,7 @@ export default function CadastroUsuario() {
     texto: string;
   } | null>(null);
 
-  // Buscar perfis da API quando o componente for montado
+  //Buscar perfis da API quando o componente for montado
   useEffect(() => {
     async function buscarPerfis() {
       try {
@@ -62,7 +65,7 @@ export default function CadastroUsuario() {
     buscarPerfis();
   }, []);
 
-  // Função para formatação automática de CPF enquanto digita
+  //Função para formatação automática de CPF enquanto digita
   function formatarCPF(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const cpfLimitado = apenasNumeros.slice(0, 11);
@@ -87,7 +90,7 @@ export default function CadastroUsuario() {
     return cpfFormatado;
   }
 
-  // Função para formatação automática de telefone enquanto digita
+  //Função para formatação automática de telefone enquanto digita
   function formatarTelefone(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const telefoneLimitado = apenasNumeros.slice(0, 11);
@@ -110,6 +113,7 @@ export default function CadastroUsuario() {
     return telefoneFormatado;
   }
 
+  //Função para lidar com mudanças nos campos do formulário
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
@@ -124,13 +128,14 @@ export default function CadastroUsuario() {
     }
   }
 
+  //Função para lidar com o envio do formulário
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
 
     try {
-      // Preparar dados para API conforme userController.ts
+      //Preparar dados para API conforme userController.ts
       const dadosUsuario = {
         nome_completo: form.nome_completo,
         email: form.email,
@@ -138,13 +143,13 @@ export default function CadastroUsuario() {
         telefone: form.telefone,
         cpf: form.cpf,
         semestre: form.semestre,
-        perfil_id: Number(form.perfil_id), // Convertendo para número, pois pode vir como string do select
+        perfil_id: Number(form.perfil_id), //Convertendo para número, pois pode vir como string do select
       };
 
-      // Fazer requisição POST para /usuario
+      //Fazer requisição POST para /usuario
       await api.post("/usuario", dadosUsuario);
 
-      // Limpar formulário após sucesso
+      //Limpar formulário após sucesso
       setForm({
         nome_completo: "",
         email: "",
@@ -152,17 +157,16 @@ export default function CadastroUsuario() {
         telefone: "",
         cpf: "",
         semestre: "",
-        perfil_id: perfis.length > 0 ? String(perfis[0].id) : "", // Reset para o primeiro perfil
+        perfil_id: perfis.length > 0 ? String(perfis[0].id) : "", //Reset para o primeiro perfil
       });
 
-      // Mostrar mensagem de sucesso
+      //Mostrar mensagem de sucesso
       setMensagem({
         tipo: "sucesso",
         texto: `Usuário cadastrado com sucesso! Nome: ${dadosUsuario.nome_completo}, Email: ${dadosUsuario.email}`,
       });
     } catch (error: unknown) {
-      // Substitua 'any' por 'unknown'
-      // Verificação de tipo adequada para acessar as propriedades com segurança
+      //Verificação de tipo adequada para acessar as propriedades com segurança
       if (error instanceof AxiosError) {
         setMensagem({
           tipo: "erro",
@@ -171,7 +175,6 @@ export default function CadastroUsuario() {
             "Erro ao cadastrar usuário. Verifique os dados e tente novamente.",
         });
       } else {
-        // Para outros tipos de erros
         setMensagem({
           tipo: "erro",
           texto:
@@ -184,10 +187,12 @@ export default function CadastroUsuario() {
     }
   }
 
+  //Função para voltar à página anterior
   function handleVoltar() {
     window.history.back();
   }
 
+  //Renderizar o componente
   return (
     <div className="bg-white min-h-screen flex flex-row overflow-hidden ml-[288px]">
       <NavBar />
@@ -196,6 +201,7 @@ export default function CadastroUsuario() {
         <main className="flex flex-1 items-center justify-center p-4 overflow-y-auto bg-gray-100">
           <div className="bg-white w-full max-w-2xl mt-16 rounded-[20px] shadow-sm border border-blue-200">
             <div className="bg-blue-900 h-10 w-full rounded-t-[20px]"></div>
+            {/* Formulário de cadastro de usuário */}
             <form
               onSubmit={handleSubmit}
               className="px-8 py-8 rounded-b-[20px]"

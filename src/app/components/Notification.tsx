@@ -1,73 +1,92 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+//Importações necessárias
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
+//Definindo os tipos de notificação
 type NotificationType = "success" | "error" | "warning";
 
-// Constante para o tempo padrão de exibição da notificação
+//Constante para o tempo padrão de exibição da notificação
 const DEFAULT_NOTIFICATION_DURATION = 5000; // 5 segundos
 
+//Definindo a interface do contexto de notificação
 interface NotificationContextType {
-  showNotification: (type: NotificationType, message: string, duration?: number) => void;
+  showNotification: (
+    type: NotificationType,
+    message: string,
+    duration?: number
+  ) => void;
   hideNotification: () => void;
 }
 
+//Definindo as propriedades do provider de notificação
 interface NotificationProviderProps {
   children: ReactNode;
 }
 
+//Definindo o tipo do estado da notificação
 interface NotificationState {
   type: NotificationType;
   message: string;
   show: boolean;
-  duration: number; // Adicionar a duração ao estado
+  duration: number; //Adicionar a duração ao estado
 }
 
-// Criar o contexto
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+//Criar o contexto
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
 
-// Provider que envolve a aplicação
+//Provider que envolve a aplicação
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [notification, setNotification] = useState<NotificationState>({
     type: "success",
     message: "",
     show: false,
-    duration: DEFAULT_NOTIFICATION_DURATION, // Usar a constante
+    duration: DEFAULT_NOTIFICATION_DURATION, //Usar a constante
   });
 
-  // Fechar automaticamente após um tempo
+  //Fechar automaticamente após um tempo
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     if (notification.show) {
-      // Usar a duração definida no estado da notificação
+      //Usar a duração definida no estado da notificação
       timeoutId = setTimeout(() => {
         setNotification((prev) => ({ ...prev, show: false }));
-      }, notification.duration); 
+      }, notification.duration);
     }
     return () => clearTimeout(timeoutId);
-  }, [notification.show, notification.duration]); // Adicionar duration às dependências
+  }, [notification.show, notification.duration]); //Adicionar duration às dependências
 
-  // Função para mostrar notificação
+  //Função para mostrar notificação
   const showNotification = (
-    type: NotificationType, 
+    type: NotificationType,
     message: string,
-    duration: number = DEFAULT_NOTIFICATION_DURATION // Usar a constante como padrão
+    duration: number = DEFAULT_NOTIFICATION_DURATION //Usar a constante como padrão
   ) => {
-    // Definir a duração no estado ao mostrar a notificação
-    setNotification({ type, message, show: true, duration }); 
+    //Definir a duração no estado ao mostrar a notificação
+    setNotification({ type, message, show: true, duration });
   };
 
-  // Função para esconder notificação
+  //Função para esconder notificação
   const hideNotification = () => {
     setNotification((prev) => ({ ...prev, show: false }));
   };
 
   return (
-    <NotificationContext.Provider value={{ showNotification, hideNotification }}>
+    <NotificationContext.Provider
+      value={{ showNotification, hideNotification }}
+    >
       {children}
-      
-      {/* Componente de notificação (sem alterações aqui) */}
+
+      {/* Componente de notificação */}
       <div
         className={`fixed top-24 right-8 max-w-sm p-4 rounded-md shadow-lg transition-all duration-300 ${
           notification.show
@@ -133,11 +152,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   );
 }
 
-// Hook personalizado para usar a notificação
+//Hook personalizado para usar a notificação
 export function useNotification() {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error("useNotification deve ser usado dentro de NotificationProvider");
+    throw new Error(
+      "useNotification deve ser usado dentro de NotificationProvider"
+    );
   }
   return context;
 }
