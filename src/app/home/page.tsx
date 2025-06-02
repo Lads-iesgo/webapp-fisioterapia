@@ -1,7 +1,6 @@
 "use client";
 
 import api from "@/app/services/api";
-
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,6 +9,7 @@ import esLocale from "@fullcalendar/core/locales/pt-br";
 import { EventInput } from "@fullcalendar/core";
 
 import { useEffect, useState } from "react";
+import { useNotification } from "../components/Notification";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
@@ -21,13 +21,50 @@ import {
   Horario,
 } from "../interfaces/types";
 
-export default function Disponibilidade() {
+export default function Home() {
+  // Renomeie de Disponibilidade para Home
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
+  
+  // Importar o hook de notificação
+  const { showNotification } = useNotification();
 
+  // Verificar se houve login recente e mostrar notificação
+  useEffect(() => {
+    const loginSuccess = sessionStorage.getItem("loginSuccess");
+    
+    if (loginSuccess === "true") {
+      // Buscar dados do usuário no localStorage
+      const userDataString = localStorage.getItem("userData");
+      let perfilUsuario = "";
+      let nomeUsuario = "";
+      
+      if (userDataString) {
+        try {
+          const userData = JSON.parse(userDataString);
+          perfilUsuario = userData.perfil || "";
+          nomeUsuario = userData.nome || "";
+        } catch (e) {
+          console.error("Erro ao analisar dados do usuário:", e);
+        }
+      }
+      
+      // Mostrar notificação de login bem-sucedido com o perfil
+      const mensagemBoasVindas = perfilUsuario 
+        ? `Login realizado com sucesso! Bem-vindo ${perfilUsuario}!` 
+        : "Login realizado com sucesso! Bem-vindo(a)!";
+        
+      showNotification("success", mensagemBoasVindas);
+      
+      // Remover a flag para não mostrar a notificação novamente
+      sessionStorage.removeItem("loginSuccess");
+    }
+  }, [showNotification]);
+
+  // Carregar dados de consultas e mostrar notificação em caso de erro
   useEffect(() => {
     api
       .get<Consulta[]>("/consulta")
@@ -36,14 +73,27 @@ export default function Disponibilidade() {
       })
       .catch((err) => {
         console.error("Ops! Ocorreu um erro: " + err);
+        showNotification("error", "Não foi possível carregar as consultas. Tente novamente mais tarde.");
       });
-  }, []);
+  }, [showNotification]);
 
+  // Carregar outros dados e mostrar notificação em caso de erro
   useEffect(() => {
-    api.get("/paciente").then((res) => setPacientes(res.data));
-    api.get("/usuario").then((res) => setFisioterapeutas(res.data));
-    api.get("/horario").then((res) => setHorarios(res.data));
-  }, []);
+    Promise.all([
+      api.get("/paciente"),
+      api.get("/usuario"),
+      api.get("/horario")
+    ])
+    .then(([resPacientes, resUsuarios, resHorarios]) => {
+      setPacientes(resPacientes.data);
+      setFisioterapeutas(resUsuarios.data);
+      setHorarios(resHorarios.data);
+    })
+    .catch(error => {
+      console.error("Erro ao carregar dados:", error);
+      showNotification("error", "Erro ao carregar alguns dados. Algumas informações podem estar incompletas.");
+    });
+  }, [showNotification]);
 
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
