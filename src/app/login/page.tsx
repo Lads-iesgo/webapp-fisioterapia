@@ -55,12 +55,16 @@ export default function Login() {
       
       // Redireciona para a página home sem mostrar notificação aqui
       router.push("/home");
-    } catch (error: any) {
-      // Continua mostrando notificação de erro aqui
-      const errorMessage = error?.response?.data?.message || 
-        "Não foi possível fazer login. Verifique suas credenciais.";
+    } catch (error: unknown) {
+        // Continua mostrando notificação de erro aqui
+        let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
       
-      showNotification("error", errorMessage);
+        if (error && typeof error === "object" && "response" in error) {
+          // @ts-ignore
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
+      
+        showNotification("error", errorMessage); // <-- não esqueça essa linha!
     } finally {
       setLoading(false);
     }
