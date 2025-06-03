@@ -1,13 +1,15 @@
 "use client";
 
+//Importando a API
 import api from "@/app/services/api";
 
+//Importações necessárias
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/pt-br";
-import { EventInput } from "@fullcalendar/core";
+import { EventInput, EventClickArg } from "@fullcalendar/core";
 
 import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition, Select } from "@headlessui/react";
@@ -16,6 +18,7 @@ import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
+//Importação das tipagens necessárias
 import {
   Consulta,
   Evento,
@@ -25,26 +28,59 @@ import {
 } from "../interfaces/types";
 
 export default function Disponibilidade() {
+  //Definindo os estados para armazenar os dados
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [newEvent, setNewEvent] = useState<Evento>({
     title: 0,
     start: "",
   });
-  //const [todasConsultas, setTodasConsultas] = useState<Consulta[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<{
+    id: number | null;
+    pacienteNome?: string;
+    fisioterapeutaNome?: string;
+    horario?: string;
+  } | null>(null);
 
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "warning";
+    message: string;
+    show: boolean;
+  }>({
+    type: "success",
+    message: "",
+    show: false,
+  });
 
+  //Função para exibir notificações
+  function showNotification(
+    type: "success" | "error" | "warning",
+    message: string
+  ) {
+    setNotification({
+      type,
+      message,
+      show: true,
+    });
+
+    // Ocultar automaticamente após 5 segundos
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, show: false }));
+    }, 5000);
+  }
+
+  //Função para lidar com o clique na data
   function handleDateClick(arg: { date: Date }) {
     setNewEvent({ ...newEvent, start: arg.date, id: new Date().getTime() });
     setShowModal(true);
   }
 
+  //Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const novaConsulta: Consulta = {
@@ -58,58 +94,100 @@ export default function Disponibilidade() {
       status: newEvent.status ?? "agendada",
     };
 
-    try {
-      const response = await api.post("/consulta", novaConsulta);
-      console.log("Consulta salva:", response.data);
+    //Valida todos os campos antes de enviar
+    const pacienteError = validateField("paciente_id", newEvent.paciente_id);
+    const fisioterapeutaError = validateField(
+      "fisioterapeuta_id",
+      newEvent.fisioterapeuta_id
+    );
+    const horarioError = validateField("horario_id", newEvent.horario_id);
 
-      // Atualiza o estado com a nova consulta retornada pela API
-      setConsulta([...consulta, response.data]);
-
-      // Fecha o modal após salvar
-      handleCloseModal();
-
-      // Opcional: Exibir mensagem de sucesso
-      alert("Consulta agendada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar consulta:", error);
-      alert(
-        "Erro ao agendar consulta. Verifique o console para mais detalhes."
+    if (pacienteError || fisioterapeutaError || horarioError) {
+      setFormErrors({
+        paciente_id: pacienteError,
+        fisioterapeuta_id: fisioterapeutaError,
+        horario_id: horarioError,
+      });
+      showNotification(
+        "warning",
+        "Por favor, preencha todos os campos obrigatórios."
       );
-    }
-  };
-
-  function handleDeleteModal(data: { event: { id: string } }) {
-    setShowDeleteModal(true);
-    setIdToDelete(Number(data.event.id));
-  }
-
-  async function handleDelete() {
-    if (!idToDelete) {
-      alert("Não foi possível identificar a consulta para exclusão.");
       return;
     }
 
     try {
-      // Chamada para a API para excluir a consulta
-      await api.delete(`/consulta/${idToDelete}`);
+      //Chamada para a API para salvar a nova consulta
+      const response = await api.post("/consulta", novaConsulta);
+      console.log("Consulta salva:", response.data);
 
-      // Atualiza o estado local removendo a consulta excluída
-      setConsulta(consulta.filter((item) => Number(item.id) !== idToDelete));
+      //Atualiza o estado com a nova consulta retornada pela API
+      setConsulta([...consulta, response.data]);
 
-      // Fecha o modal e reseta o estado
+      //Fecha o modal após salvar
+      handleCloseModal();
+
+      //Notificação de sucesso
+      showNotification("success", "Consulta agendada com sucesso!");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Erro ao agendar consulta:", error.message);
+        showNotification("error", `Erro ao agendar consulta: ${error.message}`);
+      } else {
+        console.error("Erro desconhecido:", error);
+        showNotification("error", "Erro desconhecido ao agendar consulta");
+      }
+    }
+  };
+
+  //Função para lidar com a abertura do modal de exclusão
+  function handleDeleteModal(data: EventClickArg) {
+    setShowDeleteModal(true);
+    setEventToDelete({
+      id: Number(data.event.id),
+      pacienteNome: data.event.extendedProps?.pacienteNome,
+      fisioterapeutaNome: data.event.extendedProps?.fisioterapeutaNome,
+      horario: data.event.extendedProps?.horario,
+    });
+  }
+
+  //Função para lidar com a exclusão da consulta
+  async function handleDelete() {
+    if (!eventToDelete || !eventToDelete.id) {
+      showNotification(
+        "error",
+        "Não foi possível identificar a consulta para exclusão."
+      );
+      return;
+    }
+
+    try {
+      //Chamada para a API para excluir a consulta
+      await api.delete(`/consulta/${eventToDelete.id}`);
+
+      //Atualiza o estado local removendo a consulta excluída
+      setConsulta(
+        consulta.filter((item) => Number(item.id) !== eventToDelete.id)
+      );
+
+      //Fecha o modal e reseta o estado
       setShowDeleteModal(false);
-      setIdToDelete(null);
+      setEventToDelete(null);
 
-      // Feedback para o usuário
-      alert("Consulta excluída com sucesso!");
+      //Feedback para o usuário
+      showNotification(
+        "success",
+        `Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`
+      );
     } catch (error) {
       console.error("Erro ao excluir consulta:", error);
-      alert(
-        "Erro ao excluir consulta. Verifique o console para mais detalhes."
+      showNotification(
+        "error",
+        "Erro ao excluir consulta. Tente novamente mais tarde."
       );
     }
   }
 
+  //Função para fechar o modal e resetar o estado
   function handleCloseModal() {
     setShowModal(false);
     setNewEvent({
@@ -122,9 +200,29 @@ export default function Disponibilidade() {
       status: "",
     });
     setShowDeleteModal(false);
-    setIdToDelete(null);
+    setEventToDelete(null);
   }
 
+  //Adicione este estado
+  const [formErrors, setFormErrors] = useState({
+    paciente_id: "",
+    fisioterapeuta_id: "",
+    horario_id: "",
+  });
+
+  //Função de validação
+  function validateField(
+    field: string,
+    value: string | number | null | undefined
+  ): string {
+    if (!value && value !== 0) {
+      // Permitir o valor 0 como válido para campos numéricos
+      return `Este campo é obrigatório`;
+    }
+    return "";
+  }
+
+  //Efeito para buscar as consultas ao carregar a página
   useEffect(() => {
     api
       .get<Consulta[]>("/consulta")
@@ -136,12 +234,14 @@ export default function Disponibilidade() {
       });
   }, []);
 
+  //Efeito para buscar pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {
     api.get("/paciente").then((res) => setPacientes(res.data));
     api.get("/usuario").then((res) => setFisioterapeutas(res.data));
     api.get("/horario").then((res) => setHorarios(res.data));
   }, []);
 
+  //Efeito para transformar as consultas em eventos do FullCalendar
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
@@ -176,6 +276,7 @@ export default function Disponibilidade() {
       const fisioterapeutaNome =
         fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
 
+      //Criação do evento
       return {
         id: String(item.id), // Convertendo para string para evitar erro de tipagem
         title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
@@ -186,6 +287,9 @@ export default function Disponibilidade() {
           fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
+          pacienteNome: pacienteNome,
+          fisioterapeutaNome: fisioterapeutaNome,
+          horario: horario?.horario || "",
         },
       };
     });
@@ -194,47 +298,212 @@ export default function Disponibilidade() {
 
   return (
     <>
+      {/* Sistema de notificações */}
+      <div
+        className={`fixed top-24 right-8 max-w-sm p-4 rounded-md shadow-lg transition-all duration-300 ${
+          notification.show
+            ? "opacity-100 transform translate-y-0"
+            : "opacity-0 transform -translate-y-4"
+        } ${
+          notification.type === "success"
+            ? "bg-green-50 text-green-800 border-l-4 border-green-500"
+            : notification.type === "error"
+            ? "bg-red-50 text-red-800 border-l-4 border-red-500"
+            : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"
+        }`}
+        style={{
+          zIndex: 9999,
+          pointerEvents: notification.show ? "auto" : "none",
+        }}
+      >
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            {notification.type === "success" ? (
+              <CheckIcon className="h-5 w-5 text-green-500" />
+            ) : notification.type === "error" ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+            ) : (
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+            )}
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium">{notification.message}</p>
+          </div>
+          <div className="ml-auto pl-3">
+            <div className="-mx-1.5 -my-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  setNotification((prev) => ({ ...prev, show: false }))
+                }
+                className={`inline-flex rounded-md p-1.5 ${
+                  notification.type === "success"
+                    ? "text-green-500 hover:bg-green-100"
+                    : notification.type === "error"
+                    ? "text-red-500 hover:bg-red-100"
+                    : "text-yellow-500 hover:bg-yellow-100"
+                }`}
+              >
+                <span className="sr-only">Fechar</span>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <NavBar />
       <TopBar title="Disponibilidade" />
 
+      {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
           <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px]">
             <FullCalendar
+              //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              //Configuração do cabeçalho do calendário
               headerToolbar={{
                 start: "prev,next today",
                 center: "title",
                 end: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
+              //Tempo de duração do horário
               slotDuration={"01:00:00"}
+              //Calendário com eventos
               events={events}
+              //Indica o horário atual
               nowIndicator={true}
+              //Permite interação com o calendário
               editable={true}
+              //Configuração do tooltip
+              eventDidMount={(info) => {
+                //Cria um elemento tooltip personalizado
+                const tooltip = document.createElement("div");
+                tooltip.className = "fc-event-tooltip";
+                tooltip.innerHTML = `
+                  <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
+                    <p><strong>Paciente:</strong> ${
+                      info.event.extendedProps.pacienteNome || "Não informado"
+                    }</p>
+                    <p><strong>Fisioterapeuta:</strong> ${
+                      info.event.extendedProps.fisioterapeutaNome ||
+                      "Não informado"
+                    }</p>
+                    <p><strong>Horário:</strong> ${
+                      info.event.extendedProps.horario || "Não informado"
+                    }</p>
+                  </div>
+                `;
+                tooltip.style.position = "absolute";
+                tooltip.style.zIndex = "10000";
+                tooltip.style.display = "none";
+
+                document.body.appendChild(tooltip);
+
+                // Mostra o tooltip no hover com verificação de posição
+                info.el.addEventListener("mouseenter", () => {
+                  const rect = info.el.getBoundingClientRect();
+
+                  // Define tooltip como visível mas fora da tela para poder calcular dimensões
+                  tooltip.style.display = "block";
+                  tooltip.style.left = "-9999px";
+                  tooltip.style.top = "-9999px";
+
+                  // Obtém as dimensões do tooltip
+                  const tooltipRect = tooltip.getBoundingClientRect();
+                  const tooltipWidth = tooltipRect.width;
+                  const tooltipHeight = tooltipRect.height;
+
+                  // Verifica espaço à direita
+                  const spaceRight = window.innerWidth - rect.right;
+                  // Verifica espaço abaixo
+                  const spaceBottom = window.innerHeight - rect.top;
+
+                  // Posicionamento horizontal
+                  if (spaceRight >= tooltipWidth + 10) {
+                    // Suficiente espaço à direita
+                    tooltip.style.left = rect.right + 10 + "px";
+                  } else {
+                    // Não há espaço à direita, posicionar à esquerda
+                    tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
+                  }
+
+                  // Posicionamento vertical
+                  if (spaceBottom >= tooltipHeight + 10) {
+                    // Suficiente espaço abaixo
+                    tooltip.style.top = rect.top + "px";
+                  } else {
+                    // Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
+                    const topPosition = Math.max(
+                      10,
+                      rect.bottom - tooltipHeight
+                    );
+                    tooltip.style.top = topPosition + "px";
+                  }
+                });
+
+                // Esconde o tooltip quando o mouse sai
+                info.el.addEventListener("mouseleave", () => {
+                  tooltip.style.display = "none";
+                });
+
+                // Remove o tooltip quando o evento é desmontado
+                return () => {
+                  document.body.removeChild(tooltip);
+                };
+              }}
+              //Permite selecionar eventos
               selectable={true}
+              //Permite selecionar múltiplos dias
               selectMirror={true}
+              //Configuração do idioma
               locale={esLocale}
+              //Configuração de visualização inicial
               initialView="dayGridMonth"
+              //Configuração de horários de trabalho
               businessHours={{
                 start: "14:00",
                 end: "16:00",
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
               }}
+              //Permite adicionar eventos ao clicar em uma data
               dateClick={handleDateClick}
+              //Permite editar eventos ao clicar
               eventClick={(data) => handleDeleteModal(data)}
+              //Configuração de altura do calendário
               height={600}
+              //Configuração de expansão de linhas
               expandRows={true}
+              //Configuração das datas do cabeçalho
               stickyHeaderDates={true}
+              //Configuração de eventos máximos do dia
               dayMaxEvents={true}
+              //Configuração de janela de redimensionamento
               handleWindowResize={true}
+              //Tempo de inicialização do calendário
               slotMinTime="14:00:00"
+              //Tempo de finalização do calendário
               slotMaxTime="17:00:00"
-              allDaySlot={false}
+              //Configuração de tempo de rolagem
               scrollTime="08:00:00"
             />
           </div>
         </div>
 
+        {/* Modal de excluir consulta */}
         <Transition.Root show={showDeleteModal} as={Fragment}>
           <Dialog
             as="div"
@@ -250,7 +519,7 @@ export default function Disponibilidade() {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              <div className="fixed inset-0 backdrop-blur-xs transition-opacity" />
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -284,11 +553,20 @@ export default function Disponibilidade() {
                             as="h3"
                             className="text-base font-semibold leading-6 text-gray-900"
                           >
-                            Delete Event
+                            Excluir Consulta
                           </Dialog.Title>
                           <div className="mt-2">
                             <p className="text-sm text-gray-500">
-                              Deseja excluir está consulta?
+                              Deseja excluir a consulta de{" "}
+                              <strong>
+                                {eventToDelete?.pacienteNome ||
+                                  "paciente não identificado"}
+                              </strong>{" "}
+                              com{" "}
+                              <strong>
+                                {eventToDelete?.fisioterapeutaNome}
+                              </strong>{" "}
+                              às <strong>{eventToDelete?.horario}</strong>?
                             </p>
                           </div>
                         </div>
@@ -318,6 +596,7 @@ export default function Disponibilidade() {
             </div>
           </Dialog>
         </Transition.Root>
+        {/* Modal de adicionar nova consulta */}
         <Transition.Root show={showModal} as={Fragment}>
           <Dialog as="div" className="relative z-10" onClose={setShowModal}>
             <Transition.Child
@@ -329,7 +608,7 @@ export default function Disponibilidade() {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              <div className="fixed inset-0 backdrop-blur-xs transition-opacity" />
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -360,69 +639,150 @@ export default function Disponibilidade() {
                         </Dialog.Title>
                         <form
                           onSubmit={handleSubmit}
-                          className="grid grid-cols-3"
+                          className="mt-4 flex flex-col space-y-4 w-full"
                         >
-                          <Select
-                            value={newEvent.paciente_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                paciente_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o paciente</option>
-                            {pacientes.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.nome_completo}
-                              </option>
-                            ))}
-                          </Select>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Paciente
+                              </label>
+                              {/* Importação dinâmica dos pacientes, dos
+                              fisioterapeutas e dos horários cadastrados */}
+                              <Select
+                                value={newEvent.paciente_id ?? ""}
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
+                                  setNewEvent({
+                                    ...newEvent,
+                                    paciente_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    paciente_id: validateField(
+                                      "paciente_id",
+                                      value
+                                    ),
+                                  });
+                                }}
+                                required
+                                className={`w-full rounded-md border ${
+                                  formErrors.paciente_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
+                              >
+                                <option value="">Selecione o paciente</option>
+                                {pacientes.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.nome_completo}
+                                  </option>
+                                ))}
+                              </Select>
+                              {formErrors.paciente_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.paciente_id}
+                                </p>
+                              )}
+                            </div>
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Fisioterapeuta
+                              </label>
+                              <Select
+                                value={newEvent.fisioterapeuta_id ?? ""}
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
+                                  setNewEvent({
+                                    ...newEvent,
+                                    fisioterapeuta_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    fisioterapeuta_id: validateField(
+                                      "fisioterapeuta_id",
+                                      value
+                                    ),
+                                  });
+                                }}
+                                required
+                                className={`w-full rounded-md border ${
+                                  formErrors.fisioterapeuta_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
+                              >
+                                <option value="">
+                                  Selecione o fisioterapeuta
+                                </option>
+                                {fisioterapeutas.map((f) => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.nome_completo}
+                                  </option>
+                                ))}
+                              </Select>
+                              {formErrors.fisioterapeuta_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.fisioterapeuta_id}
+                                </p>
+                              )}
+                            </div>
+                            <div className="w-full">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Horário
+                              </label>
+                              <Select
+                                value={newEvent.horario_id ?? ""}
+                                onChange={(e) => {
+                                  const value = Number(e.target.value);
+                                  setNewEvent({
+                                    ...newEvent,
+                                    horario_id: value,
+                                  });
+                                  setFormErrors({
+                                    ...formErrors,
+                                    horario_id: validateField(
+                                      "horario_id",
+                                      value
+                                    ),
+                                  });
+                                }}
+                                required
+                                className={`w-full rounded-md border ${
+                                  formErrors.horario_id
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } px-4 py-3 text-base select-custom`}
+                              >
+                                <option value="">Selecione o horário</option>
+                                {horarios.map((h) => (
+                                  <option key={h.id} value={h.id}>
+                                    {h.horario}
+                                  </option>
+                                ))}
+                              </Select>
+                              {formErrors.horario_id && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {formErrors.horario_id}
+                                </p>
+                              )}
+                            </div>
+                          </div>
 
-                          <Select
-                            value={newEvent.fisioterapeuta_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                fisioterapeuta_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o fisioterapeuta</option>
-                            {fisioterapeutas.map((f) => (
-                              <option key={f.id} value={f.id}>
-                                {f.nome_completo}
-                              </option>
-                            ))}
-                          </Select>
-
-                          <Select
-                            value={newEvent.horario_id ?? ""}
-                            onChange={(e) =>
-                              setNewEvent({
-                                ...newEvent,
-                                horario_id: Number(e.target.value),
-                              })
-                            }
-                            required
-                            className="justify-self-start"
-                          >
-                            <option value="">Selecione o horário</option>
-                            {horarios.map((h) => (
-                              <option key={h.id} value={h.id}>
-                                {h.horario}
-                              </option>
-                            ))}
-                          </Select>
-
-                          {/* outros campos, como data, status, etc */}
-                          <button type="submit" className="col-start-2">
-                            Criar
-                          </button>
+                          <div className="mt-5 flex justify-center space-x-4">
+                            <button
+                              type="button"
+                              className="inline-flex justify-center rounded-md bg-gray-300 px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-400"
+                              onClick={() => setShowModal(false)}
+                            >
+                              Voltar
+                            </button>
+                            <button
+                              type="submit"
+                              className="inline-flex justify-center rounded-md bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
+                            >
+                              Criar
+                            </button>
+                          </div>
                         </form>
                       </div>
                     </div>

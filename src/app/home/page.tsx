@@ -1,7 +1,7 @@
 "use client";
 
+//Importações necessárias
 import api from "@/app/services/api";
-
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,10 +10,12 @@ import esLocale from "@fullcalendar/core/locales/pt-br";
 import { EventInput } from "@fullcalendar/core";
 
 import { useEffect, useState } from "react";
+import { useNotification } from "../components/Notification";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
+//Importação das tipagens necessárias
 import {
   Consulta,
   Paciente,
@@ -21,13 +23,51 @@ import {
   Horario,
 } from "../interfaces/types";
 
-export default function Disponibilidade() {
+export default function Home() {
+  //Definindo os estados para armazenar os dados
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
+  const [nomeUsuario, setNomeUsuario] = useState("");
 
+  //Importar o hook de notificação
+  const { showNotification } = useNotification();
+
+  //Verificar se houve login recente e mostrar notificação
+  useEffect(() => {
+    const loginSuccess = sessionStorage.getItem("loginSuccess");
+
+    if (loginSuccess === "true") {
+      //Buscar dados do usuário no localStorage
+      const userDataString = localStorage.getItem("userData");
+      let perfilUsuario = "";
+
+      if (userDataString) {
+        try {
+          //Salvar o nome do usuário e o perfil
+          const userData = JSON.parse(userDataString);
+          perfilUsuario = userData.perfil || "";
+          setNomeUsuario(userData.nome || "");
+        } catch (e) {
+          console.error("Erro ao analisar dados do usuário:", e);
+        }
+      }
+
+      //Mostrar notificação de login bem-sucedido com o perfil
+      const mensagemBoasVindas = perfilUsuario
+        ? `Login realizado com sucesso! Bem-vindo ${perfilUsuario}!`
+        : "Login realizado com sucesso! Bem-vindo(a)!";
+
+      showNotification("success", mensagemBoasVindas);
+
+      //Remover a flag para não mostrar a notificação novamente
+      sessionStorage.removeItem("loginSuccess");
+    }
+  }, [showNotification]);
+
+  //Carregar dados de consultas e mostrar notificação em caso de erro
   useEffect(() => {
     api
       .get<Consulta[]>("/consulta")
@@ -36,15 +76,35 @@ export default function Disponibilidade() {
       })
       .catch((err) => {
         console.error("Ops! Ocorreu um erro: " + err);
+        showNotification(
+          "error",
+          "Não foi possível carregar as consultas. Tente novamente mais tarde."
+        );
       });
-  }, []);
+  }, [showNotification]);
 
+  //Carregar outros dados e mostrar notificação em caso de erro
   useEffect(() => {
-    api.get("/paciente").then((res) => setPacientes(res.data));
-    api.get("/usuario").then((res) => setFisioterapeutas(res.data));
-    api.get("/horario").then((res) => setHorarios(res.data));
-  }, []);
+    Promise.all([
+      api.get("/paciente"),
+      api.get("/usuario"),
+      api.get("/horario"),
+    ])
+      .then(([resPacientes, resUsuarios, resHorarios]) => {
+        setPacientes(resPacientes.data);
+        setFisioterapeutas(resUsuarios.data);
+        setHorarios(resHorarios.data);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar dados:", error);
+        showNotification(
+          "error",
+          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas."
+        );
+      });
+  }, [showNotification]);
 
+  //Montar os eventos do calendário a partir dos dados de consulta
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
@@ -53,7 +113,7 @@ export default function Disponibilidade() {
       );
       const horario = horarios.find((h) => h.id === item.horario_id);
 
-      // Extrai a data (YYYY-MM-DD) da data_consulta
+      //Extrai a data (YYYY-MM-DD) da data_consulta
       const data =
         typeof item.data_consulta === "string"
           ? item.data_consulta.split("T")[0]
@@ -61,9 +121,9 @@ export default function Disponibilidade() {
 
       let dataHoraISO: string | Date = item.data_consulta;
 
-      // Só monta a string se ambos existirem e forem válidos
+      //Só monta a string se ambos existirem e forem válidos
       if (horario?.horario && data) {
-        // Garante que o horário fique no formato "HH:mm:00"
+        //Garante que o horário fique no formato "HH:mm:00"
         const horarioFormatado = `${horario.horario}`;
         const dataHoraString = `${data}T${horarioFormatado}`;
         const dataHora = new Date(dataHoraString);
@@ -74,13 +134,14 @@ export default function Disponibilidade() {
         }
       }
 
-      // Informações formatadas para exibição
+      //Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
       const fisioterapeutaNome =
         fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
 
+      //Retorna o objeto de evento formatado
       return {
-        id: String(item.id), // Convertendo para string para evitar erro de tipagem
+        id: String(item.id), //Convertendo para string para evitar erro de tipagem
         title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
@@ -89,45 +150,144 @@ export default function Disponibilidade() {
           fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
+          pacienteNome: pacienteNome,
+          fisioterapeutaNome: fisioterapeutaNome,
+          horario: horario?.horario || "",
         },
       };
     });
     setEvents(eventos);
   }, [consulta, pacientes, fisioterapeutas, horarios]);
 
+  //Renderiza o componente principal
   return (
     <>
       <NavBar />
-      <TopBar title="Home" />
+      <TopBar title={nomeUsuario ? `Bem-vindo, ${nomeUsuario}` : "Home"} />
 
+      {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
           <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px] cursor-default">
             <FullCalendar
+              //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              //Configuração do cabeçalho do calendário
               headerToolbar={{
                 start: "prev,next today",
                 center: "title",
                 end: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
+              //Tempo de duração do horário
               slotDuration={"01:00:00"}
+              //Calendário com eventos
               events={events}
+              //Indica o horário atual
               nowIndicator={true}
+              //Configuração do idioma
               locale={esLocale}
+              //Configuração de visualização inicial
               initialView="dayGridMonth"
+              //Configuração de horários de trabalho
               businessHours={{
                 start: "14:00",
                 end: "16:00",
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
               }}
+              //Configuração do tooltip
+              eventDidMount={(info) => {
+                //Cria um elemento tooltip personalizado
+                const tooltip = document.createElement("div");
+                tooltip.className = "fc-event-tooltip";
+                tooltip.innerHTML = `
+                  <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
+                    <p><strong>Paciente:</strong> ${
+                      info.event.extendedProps.pacienteNome || "Não informado"
+                    }</p>
+                    <p><strong>Fisioterapeuta:</strong> ${
+                      info.event.extendedProps.fisioterapeutaNome ||
+                      "Não informado"
+                    }</p>
+                    <p><strong>Horário:</strong> ${
+                      info.event.extendedProps.horario || "Não informado"
+                    }</p>
+                  </div>
+                `;
+                tooltip.style.position = "absolute";
+                tooltip.style.zIndex = "10000";
+                tooltip.style.display = "none";
+
+                document.body.appendChild(tooltip);
+
+                //Mostra o tooltip no hover com verificação de posição
+                info.el.addEventListener("mouseenter", () => {
+                  const rect = info.el.getBoundingClientRect();
+
+                  //Define tooltip como visível mas fora da tela para poder calcular dimensões
+                  tooltip.style.display = "block";
+                  tooltip.style.left = "-9999px";
+                  tooltip.style.top = "-9999px";
+
+                  //Obtém as dimensões do tooltip
+                  const tooltipRect = tooltip.getBoundingClientRect();
+                  const tooltipWidth = tooltipRect.width;
+                  const tooltipHeight = tooltipRect.height;
+
+                  //Verifica espaço à direita
+                  const spaceRight = window.innerWidth - rect.right;
+                  //Verifica espaço abaixo
+                  const spaceBottom = window.innerHeight - rect.top;
+
+                  //Posicionamento horizontal
+                  if (spaceRight >= tooltipWidth + 10) {
+                    //Suficiente espaço à direita
+                    tooltip.style.left = rect.right + 10 + "px";
+                  } else {
+                    //Não há espaço à direita, posicionar à esquerda
+                    tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
+                  }
+
+                  //Posicionamento vertical
+                  if (spaceBottom >= tooltipHeight + 10) {
+                    //Suficiente espaço abaixo
+                    tooltip.style.top = rect.top + "px";
+                  } else {
+                    //Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
+                    const topPosition = Math.max(
+                      10,
+                      rect.bottom - tooltipHeight
+                    );
+                    tooltip.style.top = topPosition + "px";
+                  }
+                });
+
+                //Esconde o tooltip quando o mouse sai
+                info.el.addEventListener("mouseleave", () => {
+                  tooltip.style.display = "none";
+                });
+
+                //Remove o tooltip quando o evento é desmontado
+                return () => {
+                  document.body.removeChild(tooltip);
+                };
+              }}
+              //Configuração de altura do calendário
               height={600}
+              //Configuração de expansão de linhas
               expandRows={true}
+              //Configuração das datas do cabeçalho
               stickyHeaderDates={true}
+              //Configuração de eventos máximos do dia
               dayMaxEvents={true}
+              //Configuração de janela de redimensionamento
               handleWindowResize={true}
+              //Tempo de inicialização do calendário
               slotMinTime="14:00:00"
+              //Tempo de finalização do calendário
               slotMaxTime="17:00:00"
+              //Configuração de slots de dia inteiro
               allDaySlot={false}
+              //Configuração de tempo de rolagem
               scrollTime="08:00:00"
             />
           </div>

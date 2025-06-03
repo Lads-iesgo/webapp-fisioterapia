@@ -1,12 +1,16 @@
 "use client";
 
+//Importações necessárias
 import { useState } from "react";
+import { AxiosError } from "axios";
+
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
 
 export default function CadastrarPaciente() {
+  //Estado para armazenar os dados do formulário
   const [form, setForm] = useState({
     nome: "",
     sobrenome: "",
@@ -27,7 +31,7 @@ export default function CadastrarPaciente() {
     texto: string;
   } | null>(null);
 
-  // Função para formatação automática de CPF enquanto digita
+  //Função para formatação automática de CPF enquanto digita
   function formatarCPF(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const cpfLimitado = apenasNumeros.slice(0, 11);
@@ -52,7 +56,7 @@ export default function CadastrarPaciente() {
     return cpfFormatado;
   }
 
-  // Função para formatação automática de data enquanto digita
+  //Função para formatação automática de data enquanto digita
   function formatarDataNascimento(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const dataLimitada = apenasNumeros.slice(0, 8);
@@ -72,7 +76,7 @@ export default function CadastrarPaciente() {
     return dataFormatada;
   }
 
-  // Função para formatação automática de telefone enquanto digita
+  //Função para formatação automática de telefone enquanto digita
   function formatarTelefone(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const telefoneLimitado = apenasNumeros.slice(0, 11);
@@ -95,7 +99,7 @@ export default function CadastrarPaciente() {
     return telefoneFormatado;
   }
 
-  // Função para formatação automática de CEP enquanto digita
+  //Função para formatação automática de CEP enquanto digita
   function formatarCEP(valor: string): string {
     const apenasNumeros = valor.replace(/\D/g, "");
     const cepLimitado = apenasNumeros.slice(0, 8);
@@ -110,7 +114,7 @@ export default function CadastrarPaciente() {
     return cepFormatado;
   }
 
-  // Manipulador de alteração com formatação automática
+  //Manipulador de alteração com formatação automática
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
@@ -129,6 +133,7 @@ export default function CadastrarPaciente() {
     }
   }
 
+  //Função para formatar a data para o formato esperado pela API (YYYY-MM-DD)
   function formatarDataParaAPI(dataStr: string) {
     if (dataStr.includes("-")) return dataStr;
 
@@ -136,11 +141,13 @@ export default function CadastrarPaciente() {
     return `${ano}-${mes}-${dia}`;
   }
 
+  //Função para lidar com o envio do formulário
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
 
+    //Validação simples para verificar se o CPF já está preenchido
     try {
       const dadosPaciente = {
         nome_completo: `${form.nome} ${form.sobrenome}`,
@@ -153,8 +160,9 @@ export default function CadastrarPaciente() {
         endereco: `${form.endereco}, ${form.numero}, ${form.bairro}, ${form.cidade}`,
       };
 
-      const response = await api.post("/paciente", dadosPaciente);
+      await api.post("/paciente", dadosPaciente);
 
+      //Limpar o formulário após o envio
       setForm({
         nome: "",
         sobrenome: "",
@@ -174,11 +182,13 @@ export default function CadastrarPaciente() {
         tipo: "sucesso",
         texto: `Paciente cadastrado com sucesso! Nome: ${dadosPaciente.nome_completo}, CPF: ${dadosPaciente.cpf}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message: string }>;
+
       setMensagem({
         tipo: "erro",
         texto:
-          error?.response?.data?.message ||
+          axiosError.response?.data?.message ||
           "Erro ao cadastrar paciente. Verifique os dados e tente novamente.",
       });
     } finally {
@@ -189,15 +199,13 @@ export default function CadastrarPaciente() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
-      <div className="ml-72"> {/* Margem à esquerda para o NavBar */}
+      <div className="ml-72">
+        {" "}
         <TopBar title="Cadastrar Paciente" />
-        {/* Aqui é onde ajustamos a margem, removendo o mt-40 */}
-        <main className="pt-24 px-4 md:px-8 pb-8">
+        <main className="pt-24 px-4 md:px-8 mt-14 pb-8">
           <div className="max-w-4xl mx-auto overflow-hidden rounded-[20px] shadow-lg">
-            {/* Header azul escuro sem bordas arredondadas no topo */}
-            <div className="bg-blue-900 h-12 w-full"></div>
-            
-            {/* O restante do formulário permanece idêntico */}
+            <div className="bg-blue-900 h-10 w-full"></div>
+            {/* Formulário de cadastro de paciente */}
             <form
               onSubmit={handleSubmit}
               className="border border-gray-200 bg-white px-4 sm:px-6 md:px-8 py-6 rounded-b-[20px]"

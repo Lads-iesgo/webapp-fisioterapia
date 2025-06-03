@@ -1,22 +1,26 @@
 "use client";
 
+import { useCookies } from 'next-client-cookies'; // Alterar esta importação
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "../components/button";
 import api from "../services/api";
+import { useNotification } from "../components/Notification";
 
 import logo from "../../../public/logo-iesgo.png";
 
 export default function Login() {
   const router = useRouter();
+  const { showNotification } = useNotification();
+  const cookies = useCookies(); // Usar hook em vez de factory function
+  
   const [credentials, setCredentials] = useState({
     email: "",
     senha: "",
   });
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -25,22 +29,42 @@ export default function Login() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErro("");
     setLoading(true);
 
     try {
-      const response = await api.post("/login", credentials);
+      const response = await api.post("/auth/login", credentials);
       
-      // Aqui você pode armazenar o token em localStorage ou cookies
-      localStorage.setItem("token", response.data.token);
+      // Armazenar o token no cookies
+      cookies.set('token', response.data.token, { 
+        expires: 1, // expira em 1 dias
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
       
-      // Redireciona para a página inicial
-      router.push("/");
-    } catch (error: any) {
-      setErro(
-        error?.response?.data?.message || 
-        "Não foi possível fazer login. Verifique suas credenciais."
-      );
+      // Salvar informações do usuário no localStorage
+      if (response.data.user) {
+        localStorage.setItem("userData", JSON.stringify({
+          email: response.data.user.email,
+          nome: response.data.user.nome,
+          perfil: response.data.user.perfil
+        }));
+      }
+      
+      // Armazenar flag indicando login bem-sucedido para a Home mostrar notificação
+      sessionStorage.setItem("loginSuccess", "true");
+      
+      // Redireciona para a página home sem mostrar notificação aqui
+      router.push("/home");
+    } catch (error: unknown) {
+        // Continua mostrando notificação de erro aqui
+        let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
+      
+        if (error && typeof error === "object" && "response" in error) {
+          // @ts-expect-error
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
+      
+        showNotification("error", errorMessage); // <-- não esqueça essa linha!
     } finally {
       setLoading(false);
     }
@@ -102,13 +126,6 @@ export default function Login() {
                 required
               />
             </div>
-            
-            {/* Mensagem de erro */}
-            {erro && (
-              <div className="text-center font-semibold rounded-[5px] p-3 bg-red-100 text-red-800 border border-red-300">
-                {erro}
-              </div>
-            )}
             
             {/* Link para recuperação de senha */}
             <div className="text-right">
