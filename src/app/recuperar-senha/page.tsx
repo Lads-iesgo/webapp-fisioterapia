@@ -24,16 +24,21 @@ export default function RecuperarSenha() {
 
     try {
       await api.post("/recuperar-senha", { email });
-      
+
       setMensagem({
         tipo: "sucesso",
-        texto: "Enviamos um email com instruções para redefinir sua senha."
+        texto: "Enviamos um email com instruções para redefinir sua senha.",
       });
       setEmail("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setMensagem({
         tipo: "erro",
-        texto: error?.response?.data?.message || "Não foi possível processar sua solicitação."
+        texto:
+          error && typeof error === "object" && "response" in error
+            ? // @ts-expect-error - O tipo de erro da API não está corretamente tipado como AxiosError
+              error.response?.data?.message ||
+              "Não foi possível processar sua solicitação."
+            : "Não foi possível processar sua solicitação.",
       });
     } finally {
       setLoading(false);
@@ -45,11 +50,11 @@ export default function RecuperarSenha() {
       <div className="w-full max-w-md overflow-hidden rounded-[20px] shadow-lg">
         {/* Header azul escuro - Mantendo o mesmo estilo da página de login */}
         <div className="bg-blue-900 p-6 flex flex-col items-center justify-center">
-          <Image 
-            src={logo} 
-            width={160} 
-            height={60} 
-            priority 
+          <Image
+            src={logo}
+            width={160}
+            height={60}
+            priority
             alt="Logo Instituição IESGO"
             className="mb-2"
           />
@@ -57,7 +62,7 @@ export default function RecuperarSenha() {
             FISIOTERAPIA
           </h2>
         </div>
-        
+
         {/* Formulário de recuperação de senha */}
         <div className="bg-white p-8 border border-gray-200 rounded-b-[20px]">
           <h1 className="text-2xl font-bold text-blue-900 mb-2 text-center">
@@ -66,13 +71,11 @@ export default function RecuperarSenha() {
           <p className="text-gray-600 mb-6 text-center">
             Digite seu email para receber instruções de recuperação de senha
           </p>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo de Email */}
             <div>
-              <label className="block text-base font-medium mb-1">
-                Email
-              </label>
+              <label className="block text-base font-medium mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -82,10 +85,10 @@ export default function RecuperarSenha() {
                 required
               />
             </div>
-            
+
             {/* Mensagem de erro ou sucesso */}
             {mensagem && (
-              <div 
+              <div
                 className={`text-center font-semibold rounded-[5px] p-3 ${
                   mensagem.tipo === "sucesso"
                     ? "bg-green-100 text-green-800 border border-green-300"
@@ -95,7 +98,7 @@ export default function RecuperarSenha() {
                 {mensagem.texto}
               </div>
             )}
-            
+
             {/* Botões */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/login" className="w-full sm:w-1/2">
@@ -116,7 +119,7 @@ export default function RecuperarSenha() {
               />
             </div>
           </form>
-          
+
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>© {new Date().getFullYear()} IESGO - Clínica de Fisioterapia</p>
           </div>
