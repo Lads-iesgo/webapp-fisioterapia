@@ -60,7 +60,7 @@ export default function Login() {
         let errorMessage = "Não foi possível fazer login. Verifique suas credenciais.";
       
         if (error && typeof error === "object" && "response" in error) {
-          // @ts-ignore
+          // @ts-expect-error
           errorMessage = error.response?.data?.message || errorMessage;
         }
       
