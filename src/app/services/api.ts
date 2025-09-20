@@ -37,14 +37,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    //Se receber erro 401 (não autorizado), redirecionar para login
-    if (error.response && error.response.status === 401) {
+    // Ignorar redirecionamento em 401 quando:
+    // - a chamada for para o endpoint de login
+    // - o header x-skip-auth-redirect for enviado
+    const requestUrl: string | undefined = error?.config?.url;
+    const skipRedirect = error?.config?.headers?.["x-skip-auth-redirect"] === "true";
+
+    if (
+      error?.response?.status === 401 &&
+      !skipRedirect &&
+      requestUrl &&
+      !requestUrl.includes("/auth/login")
+    ) {
       //Remover cookie de token usando abordagem compatível
       document.cookie =
         "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
       //Redirecionar para login (se estiver no navegador)
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
