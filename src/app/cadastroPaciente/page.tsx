@@ -1,15 +1,18 @@
 "use client";
 
 //Importações necessárias
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
+import { usePermissions } from "../hooks/usePermissions";
 
 export default function CadastrarPaciente() {
+  const { checkCanUpdate } = usePermissions();
+  
   //Estado para armazenar os dados do formulário
   const [form, setForm] = useState({
     nome: "",
@@ -30,6 +33,12 @@ export default function CadastrarPaciente() {
     tipo: "erro" | "sucesso";
     texto: string;
   } | null>(null);
+  const [canCreate, setCanCreate] = useState(false);
+
+  // Verificar permissões ao carregar
+  useEffect(() => {
+    setCanCreate(checkCanUpdate('paciente'));
+  }, [checkCanUpdate]);
 
   //Função para formatação automática de CPF enquanto digita
   function formatarCPF(valor: string): string {
@@ -399,12 +408,21 @@ export default function CadastrarPaciente() {
                   {mensagem.texto}
                 </div>
               )}
+              
+              {/* Mensagem de permissão negada */}
+              {!canCreate && (
+                <div className="p-4 rounded-md bg-yellow-100 text-yellow-800 border border-yellow-300">
+                  Você não tem permissão para cadastrar pacientes. Apenas professores, coordenadores e administradores podem realizar esta ação.
+                </div>
+              )}
+              
               <div className="flex justify-end mt-6">
                 <Button
                   text={loading ? "Salvando..." : "Salvar"}
                   onClick={() => {}}
                   variant="primary"
                   type="submit"
+                  disabled={!canCreate || loading}
                 />
               </div>
             </form>

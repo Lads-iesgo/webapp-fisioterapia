@@ -1,7 +1,7 @@
 "use client";
 
 import { useCookies } from "next-client-cookies"; // Alterar esta importação
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +22,22 @@ export default function Login() {
   });
   const [loading, setLoading] = useState(false);
 
+  // Verificar se há mensagens de sessão expirada ou permissão negada
+  useEffect(() => {
+    const sessionExpired = sessionStorage.getItem("sessionExpired");
+    const permissionDenied = sessionStorage.getItem("permissionDenied");
+
+    if (sessionExpired === "true") {
+      showNotification("error", "Sua sessão expirou. Por favor, faça login novamente.");
+      sessionStorage.removeItem("sessionExpired");
+    }
+
+    if (permissionDenied === "true") {
+      showNotification("error", "Você não tem permissão para acessar este recurso.");
+      sessionStorage.removeItem("permissionDenied");
+    }
+  }, [showNotification]);
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
@@ -41,14 +57,17 @@ export default function Login() {
         sameSite: "strict",
       });
 
-      // Salvar informações do usuário no localStorage
+      // Salvar informações do usuário no localStorage (incluindo role)
       if (response.data.user) {
         localStorage.setItem(
           "userData",
           JSON.stringify({
+            id: response.data.user.id,
             email: response.data.user.email,
             nome: response.data.user.nome,
             perfil: response.data.user.perfil,
+            role: response.data.user.role || response.data.user.perfil?.toLowerCase(),
+            perfil_id: response.data.user.perfil_id,
           })
         );
       }

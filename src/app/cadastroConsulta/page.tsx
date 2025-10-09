@@ -8,6 +8,7 @@ import NavBar from "../components/navBar"; // Importa de src/app/components/navB
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
 import api from "../services/api";
+import { usePermissions } from "../hooks/usePermissions";
 
 //Criação de interfaces para os Pacientes
 interface Paciente {
@@ -28,6 +29,8 @@ interface Horario {
 }
 
 export default function PaginaCadastrarConsulta() {
+  const { checkCanUpdate } = usePermissions();
+  
   //Estados para armazenar os dados dos pacientes, fisioterapeutas e horários
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
@@ -42,6 +45,12 @@ export default function PaginaCadastrarConsulta() {
     tipo: "erro" | "sucesso";
     texto: string;
   } | null>(null);
+  const [canCreate, setCanCreate] = useState(false);
+
+  // Verificar permissões ao carregar
+  useEffect(() => {
+    setCanCreate(checkCanUpdate('paciente'));
+  }, [checkCanUpdate]);
 
   //Efeito para buscar os dados dos pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {
@@ -218,6 +227,14 @@ export default function PaginaCadastrarConsulta() {
                     {mensagem.texto}
                   </div>
                 )}
+                
+                {/* Mensagem de permissão negada */}
+                {!canCreate && (
+                  <div className="p-4 rounded-md bg-yellow-100 text-yellow-800 border border-yellow-300 mt-4">
+                    Você não tem permissão para cadastrar consultas. Apenas professores, coordenadores e administradores podem realizar esta ação.
+                  </div>
+                )}
+                
                 <div className="flex justify-between mt-8">
                   <Button
                     text="Voltar"
@@ -230,6 +247,7 @@ export default function PaginaCadastrarConsulta() {
                     onClick={() => {}}
                     variant="primary"
                     type="submit"
+                    disabled={!canCreate || loading}
                   />
                 </div>
               </form>

@@ -8,6 +8,7 @@ import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
+import { usePermissions } from "../hooks/usePermissions";
 
 //Interface para o tipo de perfil
 interface Perfil {
@@ -17,6 +18,8 @@ interface Perfil {
 
 //Componente de cadastro de usuário
 export default function CadastroUsuario() {
+  const { checkCanUpdate } = usePermissions();
+  
   //Estado do formulário e outras variáveis
   const [form, setForm] = useState({
     nome_completo: "",
@@ -34,6 +37,12 @@ export default function CadastroUsuario() {
     tipo: "erro" | "sucesso";
     texto: string;
   } | null>(null);
+  const [canCreate, setCanCreate] = useState(false);
+
+  // Verificar permissões ao carregar
+  useEffect(() => {
+    setCanCreate(checkCanUpdate('user'));
+  }, [checkCanUpdate]);
 
   //Buscar perfis da API quando o componente for montado
   useEffect(() => {
@@ -346,6 +355,14 @@ export default function CadastroUsuario() {
                   {mensagem.texto}
                 </div>
               )}
+              
+              {/* Mensagem de permissão negada */}
+              {!canCreate && (
+                <div className="p-4 rounded-md bg-yellow-100 text-yellow-800 border border-yellow-300 mt-4">
+                  Você não tem permissão para cadastrar usuários. Apenas professores, coordenadores e administradores podem realizar esta ação.
+                </div>
+              )}
+              
               <div className="flex justify-between mt-8">
                 <Button
                   text="Voltar"
@@ -358,7 +375,7 @@ export default function CadastroUsuario() {
                   onClick={() => {}}
                   variant="primary"
                   type="submit"
-                  disabled={loadingPerfis || loading}
+                  disabled={!canCreate || loadingPerfis || loading}
                 />
               </div>
             </form>

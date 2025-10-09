@@ -14,6 +14,7 @@ import { useNotification } from "../components/Notification";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
+import { getUserInfo } from "../utils/auth";
 
 //Importação das tipagens necessárias
 import {
@@ -40,18 +41,26 @@ export default function Home() {
     const loginSuccess = sessionStorage.getItem("loginSuccess");
 
     if (loginSuccess === "true") {
-      //Buscar dados do usuário no localStorage
-      const userDataString = localStorage.getItem("userData");
+      // Obter informações do usuário do token JWT
+      const userInfo = getUserInfo();
       let perfilUsuario = "";
 
-      if (userDataString) {
-        try {
-          //Salvar o nome do usuário e o perfil
-          const userData = JSON.parse(userDataString);
-          perfilUsuario = userData.perfil || "";
-          setNomeUsuario(userData.nome || "");
-        } catch (e) {
-          console.error("Erro ao analisar dados do usuário:", e);
+      if (userInfo) {
+        // Tentar buscar dados do usuário no localStorage para obter o nome
+        const userDataString = localStorage.getItem("userData");
+        if (userDataString) {
+          try {
+            const userData = JSON.parse(userDataString);
+            setNomeUsuario(userData.nome || "");
+            perfilUsuario = userData.perfil || userInfo.role;
+          } catch (e) {
+            console.error("Erro ao analisar dados do usuário:", e);
+            // Usar role como fallback
+            perfilUsuario = userInfo.role;
+          }
+        } else {
+          // Usar role do token como fallback
+          perfilUsuario = userInfo.role;
         }
       }
 
@@ -64,6 +73,21 @@ export default function Home() {
 
       //Remover a flag para não mostrar a notificação novamente
       sessionStorage.removeItem("loginSuccess");
+    }
+    
+    // Sempre atualizar informações do usuário, mesmo sem login recente
+    const userInfo = getUserInfo();
+    if (userInfo) {
+      // Tentar obter o nome do localStorage
+      const userDataString = localStorage.getItem("userData");
+      if (userDataString) {
+        try {
+          const userData = JSON.parse(userDataString);
+          setNomeUsuario(userData.nome || "");
+        } catch (e) {
+          console.error("Erro ao analisar dados do usuário:", e);
+        }
+      }
     }
   }, [showNotification]);
 
