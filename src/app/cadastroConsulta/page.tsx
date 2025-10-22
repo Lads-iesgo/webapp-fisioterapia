@@ -3,12 +3,14 @@
 //Importações necessárias
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 
 import NavBar from "../components/navBar"; // Importa de src/app/components/navBar.tsx
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
 import api from "../services/api";
 import { usePermissions } from "../hooks/usePermissions";
+import { useNotification } from "../components/Notification";
 
 //Criação de interfaces para os Pacientes
 interface Paciente {
@@ -29,7 +31,9 @@ interface Horario {
 }
 
 export default function PaginaCadastrarConsulta() {
-  const { checkCanUpdate } = usePermissions();
+  const { checkCanUpdate, isAluno } = usePermissions();
+  const { showNotification } = useNotification();
+  const router = useRouter();
   
   //Estados para armazenar os dados dos pacientes, fisioterapeutas e horários
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -49,8 +53,21 @@ export default function PaginaCadastrarConsulta() {
 
   // Verificar permissões ao carregar
   useEffect(() => {
-    setCanCreate(checkCanUpdate('paciente'));
-  }, [checkCanUpdate]);
+    const hasPermission = checkCanUpdate('paciente');
+    setCanCreate(hasPermission);
+    
+    // Se for aluno, mostrar notificação e redirecionar
+    if (isAluno()) {
+      showNotification(
+        "error",
+        "Acesso negado! Alunos não têm permissão para cadastrar consultas."
+      );
+      // Redirecionar após um pequeno delay para que a notificação seja visível
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+    }
+  }, [checkCanUpdate, isAluno, showNotification, router]);
 
   //Efeito para buscar os dados dos pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {

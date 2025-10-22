@@ -10,6 +10,7 @@ import esLocale from "@fullcalendar/core/locales/pt-br";
 import { EventInput } from "@fullcalendar/core";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useNotification } from "../components/Notification";
 
 import NavBar from "../components/navBar";
@@ -33,8 +34,25 @@ export default function Home() {
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [nomeUsuario, setNomeUsuario] = useState("");
 
-  //Importar o hook de notificação
+  //Importar o hook de notificação e searchParams
   const { showNotification } = useNotification();
+  const searchParams = useSearchParams();
+
+  //Verificar se houve tentativa de acesso negado
+  useEffect(() => {
+    const accessDenied = searchParams.get("accessDenied");
+    const attemptedRoute = searchParams.get("attemptedRoute");
+
+    if (accessDenied === "true") {
+      const routeName = attemptedRoute?.split("/").pop() || "essa página";
+      showNotification(
+        "error",
+        `Acesso negado! Você não tem permissão para acessar ${routeName}. Apenas usuários com perfil de Professor, Coordenador ou Admin podem acessar esta página.`
+      );
+      // Limpar os parâmetros da URL sem recarregar a página
+      window.history.replaceState({}, "", "/home");
+    }
+  }, [searchParams, showNotification]);
 
   //Verificar se houve login recente e mostrar notificação
   useEffect(() => {
@@ -93,6 +111,13 @@ export default function Home() {
 
   //Carregar dados de consultas e mostrar notificação em caso de erro
   useEffect(() => {
+    // Verificar se o usuário está autenticado antes de carregar dados
+    const userInfo = getUserInfo();
+    if (!userInfo) {
+      console.warn("Usuário não autenticado, aguardando autenticação...");
+      return;
+    }
+
     api
       .get<Consulta[]>("/consulta")
       .then((response) => {
@@ -100,15 +125,30 @@ export default function Home() {
       })
       .catch((err) => {
         console.error("Ops! Ocorreu um erro: " + err);
-        showNotification(
-          "error",
-          "Não foi possível carregar as consultas. Tente novamente mais tarde."
-        );
+        // Verificar se o erro é por falta de autenticação
+        if (err?.response?.status === 401) {
+          showNotification(
+            "error",
+            "Sua sessão expirou. Por favor, faça login novamente."
+          );
+        } else {
+          showNotification(
+            "error",
+            "Não foi possível carregar as consultas. Tente novamente mais tarde."
+          );
+        }
       });
   }, [showNotification]);
 
   //Carregar outros dados e mostrar notificação em caso de erro
   useEffect(() => {
+    // Verificar se o usuário está autenticado antes de carregar dados
+    const userInfo = getUserInfo();
+    if (!userInfo) {
+      console.warn("Usuário não autenticado, aguardando autenticação...");
+      return;
+    }
+
     Promise.all([
       api.get("/paciente"),
       api.get("/usuario"),
@@ -121,10 +161,18 @@ export default function Home() {
       })
       .catch((error) => {
         console.error("Erro ao carregar dados:", error);
-        showNotification(
-          "error",
-          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas."
-        );
+        // Verificar se o erro é por falta de autenticação
+        if (error?.response?.status === 401) {
+          showNotification(
+            "error",
+            "Sua sessão expirou. Por favor, faça login novamente."
+          );
+        } else {
+          showNotification(
+            "error",
+            "Erro ao carregar alguns dados. Algumas informações podem estar incompletas."
+          );
+        }
       });
   }, [showNotification]);
 

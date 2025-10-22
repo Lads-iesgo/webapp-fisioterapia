@@ -3,12 +3,14 @@
 //Importações necessárias
 import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
 import { usePermissions } from "../hooks/usePermissions";
+import { useNotification } from "../components/Notification";
 
 //Interface para o tipo de perfil
 interface Perfil {
@@ -18,7 +20,9 @@ interface Perfil {
 
 //Componente de cadastro de usuário
 export default function CadastroUsuario() {
-  const { checkCanUpdate } = usePermissions();
+  const { checkCanUpdate, isAluno } = usePermissions();
+  const { showNotification } = useNotification();
+  const router = useRouter();
   
   //Estado do formulário e outras variáveis
   const [form, setForm] = useState({
@@ -41,8 +45,21 @@ export default function CadastroUsuario() {
 
   // Verificar permissões ao carregar
   useEffect(() => {
-    setCanCreate(checkCanUpdate('user'));
-  }, [checkCanUpdate]);
+    const hasPermission = checkCanUpdate('user');
+    setCanCreate(hasPermission);
+    
+    // Se for aluno, mostrar notificação e redirecionar
+    if (isAluno()) {
+      showNotification(
+        "error",
+        "Acesso negado! Alunos não têm permissão para cadastrar usuários."
+      );
+      // Redirecionar após um pequeno delay para que a notificação seja visível
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+    }
+  }, [checkCanUpdate, isAluno, showNotification, router]);
 
   //Buscar perfis da API quando o componente for montado
   useEffect(() => {

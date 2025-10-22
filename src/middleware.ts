@@ -107,9 +107,9 @@ export function middleware(request: NextRequest) {
 		if (!hasRoutePermission(pathname, tokenPayload.role)) {
 			// Redirecionar para home com mensagem de acesso negado
 			const url = new URL("/home", request.url);
+			url.searchParams.set("accessDenied", "true");
+			url.searchParams.set("attemptedRoute", pathname);
 			const response = NextResponse.redirect(url);
-			// Adicionar header para indicar acesso negado
-			response.headers.set("X-Access-Denied", "true");
 			return response;
 		}
 	}

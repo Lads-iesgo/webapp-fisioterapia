@@ -3,15 +3,19 @@
 //Importações necessárias
 import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
 import api from "../services/api";
 import { usePermissions } from "../hooks/usePermissions";
+import { useNotification } from "../components/Notification";
 
 export default function CadastrarPaciente() {
-  const { checkCanUpdate } = usePermissions();
+  const { checkCanUpdate, isAluno } = usePermissions();
+  const { showNotification } = useNotification();
+  const router = useRouter();
   
   //Estado para armazenar os dados do formulário
   const [form, setForm] = useState({
@@ -37,8 +41,21 @@ export default function CadastrarPaciente() {
 
   // Verificar permissões ao carregar
   useEffect(() => {
-    setCanCreate(checkCanUpdate('paciente'));
-  }, [checkCanUpdate]);
+    const hasPermission = checkCanUpdate('paciente');
+    setCanCreate(hasPermission);
+    
+    // Se for aluno, mostrar notificação e redirecionar
+    if (isAluno()) {
+      showNotification(
+        "error",
+        "Acesso negado! Alunos não têm permissão para cadastrar pacientes."
+      );
+      // Redirecionar após um pequeno delay para que a notificação seja visível
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+    }
+  }, [checkCanUpdate, isAluno, showNotification, router]);
 
   //Função para formatação automática de CPF enquanto digita
   function formatarCPF(valor: string): string {
