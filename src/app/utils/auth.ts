@@ -39,6 +39,13 @@ export function getTokenPayload(): TokenPayload | null {
 		}
 
 		const decoded = jwtDecode<TokenPayload>(token);
+		
+		// Verificar se o token tem os campos necessários
+		if (!decoded || !decoded.role || !decoded.email || !decoded.id) {
+			console.error("Token inválido: campos obrigatórios ausentes");
+			return null;
+		}
+
 		return decoded;
 	} catch (error) {
 		console.error("Erro ao decodificar token:", error);

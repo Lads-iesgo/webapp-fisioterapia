@@ -36,6 +36,16 @@ export default function Login() {
       showNotification("error", "Você não tem permissão para acessar este recurso.");
       sessionStorage.removeItem("permissionDenied");
     }
+
+    // Verificar query parameters para razões de redirecionamento
+    const urlParams = new URLSearchParams(window.location.search);
+    const reason = urlParams.get("reason");
+    
+    if (reason === "invalid_token") {
+      showNotification("error", "Seu token de autenticação é inválido ou expirou. Por favor, faça login novamente.");
+    } else if (reason === "no_token") {
+      showNotification("warning", "Por favor, faça login para acessar esta página.");
+    }
   }, [showNotification]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

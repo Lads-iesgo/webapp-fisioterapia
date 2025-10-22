@@ -39,9 +39,16 @@ function validateToken(token: string): TokenPayload | null {
 	try {
 		const decoded = jwtDecode<TokenPayload>(token);
 
+		// Verificar se o token tem os campos necessários
+		if (!decoded || !decoded.role || !decoded.email || !decoded.id) {
+			console.error("Token inválido: campos obrigatórios ausentes");
+			return null;
+		}
+
 		// Verificar se o token está expirado
 		const currentTime = Math.floor(Date.now() / 1000);
 		if (decoded.exp < currentTime) {
+			console.error("Token expirado");
 			return null;
 		}
 
@@ -86,6 +93,7 @@ export function middleware(request: NextRequest) {
 	if (isProtectedRoute && !token) {
 		const url = new URL("/login", request.url);
 		url.searchParams.set("from", pathname);
+		url.searchParams.set("reason", "no_token");
 		return NextResponse.redirect(url);
 	}
 
@@ -97,6 +105,7 @@ export function middleware(request: NextRequest) {
 		if (!tokenPayload) {
 			const url = new URL("/login", request.url);
 			url.searchParams.set("from", pathname);
+			url.searchParams.set("reason", "invalid_token");
 			// Limpar o cookie de token inválido
 			const response = NextResponse.redirect(url);
 			response.cookies.delete("token");
