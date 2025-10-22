@@ -6,12 +6,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCookies } from "next-client-cookies";
 import { useNotification } from "./Notification";
+import { usePermissions } from "../hooks/usePermissions";
 
 //Componente NavBar que representa a barra de navegação lateral
 export default function NavBar() {
   const router = useRouter();
   const cookies = useCookies();
   const { showNotification } = useNotification();
+  const { isAluno, hasFullAccess } = usePermissions();
 
   // Função para fazer logout
   const handleLogout = () => {
@@ -61,30 +63,48 @@ export default function NavBar() {
                 <span className="text-lg">Disponibilidade</span>
               </Link>
             </li>
-            <li>
-              <Link
-                href="/cadastroPaciente"
-                className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
-              >
-                <span className="text-lg">Cadastro de Paciente</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/cadastroUsuario"
-                className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
-              >
-                <span className="text-lg">Cadastro de Usuário</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/cadastroConsulta"
-                className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
-              >
-                <span className="text-lg">Cadastro de Consulta</span>
-              </Link>
-            </li>
+            
+            {/* Links restritos - apenas para professor, coordenador e admin */}
+            {hasFullAccess() && (
+              <>
+                <li>
+                  <Link
+                    href="/cadastroPaciente"
+                    className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
+                  >
+                    <span className="text-lg">Cadastro de Paciente</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/cadastroUsuario"
+                    className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
+                  >
+                    <span className="text-lg">Cadastro de Usuário</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/cadastroConsulta"
+                    className="flex items-center text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
+                  >
+                    <span className="text-lg">Cadastro de Consulta</span>
+                  </Link>
+                </li>
+              </>
+            )}
+            
+            {/* Mensagem informativa para alunos */}
+            {isAluno() && (
+              <li className="px-4 py-3 mt-4">
+                <div className="bg-blue-800 rounded-lg p-3 text-gray-300 text-sm">
+                  <p className="font-medium mb-1">Acesso Restrito</p>
+                  <p className="text-xs">
+                    Como aluno, você tem acesso apenas à Home e Disponibilidade.
+                  </p>
+                </div>
+              </li>
+            )}
           </ul>
         </nav>
 
