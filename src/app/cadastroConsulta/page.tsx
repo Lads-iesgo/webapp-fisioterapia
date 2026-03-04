@@ -159,7 +159,7 @@ export default function PaginaCadastrarConsulta() {
                 </label>
                 <label className="flex flex-col">
                   <span className="text-blue-900 font-semibold mb-2">
-                    Fisioterapeuta
+                    Aluno
                   </span>
                   <select
                     required
@@ -168,7 +168,7 @@ export default function PaginaCadastrarConsulta() {
                     className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
                   >
                     <option value="" disabled>
-                      Selecione o fisioterapeuta
+                      Selecione o aluno
                     </option>
                     {fisioterapeutas.map((f) => (
                       <option key={f.id} value={f.id}>
