@@ -78,12 +78,12 @@ export default function CadastroUsuario() {
     } else if (cpfLimitado.length <= 9) {
       cpfFormatado = `${cpfLimitado.slice(0, 3)}.${cpfLimitado.slice(
         3,
-        6
+        6,
       )}.${cpfLimitado.slice(6)}`;
     } else {
       cpfFormatado = `${cpfLimitado.slice(0, 3)}.${cpfLimitado.slice(
         3,
-        6
+        6,
       )}.${cpfLimitado.slice(6, 9)}-${cpfLimitado.slice(9)}`;
     }
 
@@ -101,12 +101,12 @@ export default function CadastroUsuario() {
     } else if (telefoneLimitado.length <= 7) {
       telefoneFormatado = `(${telefoneLimitado.slice(
         0,
-        2
+        2,
       )}) ${telefoneLimitado.slice(2)}`;
     } else {
       telefoneFormatado = `(${telefoneLimitado.slice(
         0,
-        2
+        2,
       )}) ${telefoneLimitado.slice(2, 7)}-${telefoneLimitado.slice(7)}`;
     }
 
@@ -115,7 +115,7 @@ export default function CadastroUsuario() {
 
   //Função para lidar com mudanças nos campos do formulário
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const { name, value } = e.target;
 

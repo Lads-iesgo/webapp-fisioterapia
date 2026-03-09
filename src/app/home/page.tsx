@@ -16,19 +16,14 @@ import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
 //Importação das tipagens necessárias
-import {
-  Consulta,
-  Paciente,
-  Fisioterapeuta,
-  Horario,
-} from "../interfaces/types";
+import { Consulta, Paciente, Aluno, Horario } from "../interfaces/types";
 
 export default function Home() {
   //Definindo os estados para armazenar os dados
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [nomeUsuario, setNomeUsuario] = useState("");
 
@@ -78,7 +73,7 @@ export default function Home() {
         console.error("Ops! Ocorreu um erro: " + err);
         showNotification(
           "error",
-          "Não foi possível carregar as consultas. Tente novamente mais tarde."
+          "Não foi possível carregar as consultas. Tente novamente mais tarde.",
         );
       });
   }, [showNotification]);
@@ -92,14 +87,14 @@ export default function Home() {
     ])
       .then(([resPacientes, resUsuarios, resHorarios]) => {
         setPacientes(resPacientes.data);
-        setFisioterapeutas(resUsuarios.data);
+        setAlunos(resUsuarios.data);
         setHorarios(resHorarios.data);
       })
       .catch((error) => {
         console.error("Erro ao carregar dados:", error);
         showNotification(
           "error",
-          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas."
+          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas.",
         );
       });
   }, [showNotification]);
@@ -108,9 +103,7 @@ export default function Home() {
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
-      const fisioterapeuta = fisioterapeutas.find(
-        (f) => f.id === item.fisioterapeuta_id
-      );
+      const aluno = alunos.find((f) => f.id === item.aluno_id);
       const horario = horarios.find((h) => h.id === item.horario_id);
 
       //Extrai a data (YYYY-MM-DD) da data_consulta
@@ -136,28 +129,27 @@ export default function Home() {
 
       //Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
-      const fisioterapeutaNome =
-        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+      const alunoNome = aluno?.nome_completo ?? "Aluno não informado";
 
       //Retorna o objeto de evento formatado
       return {
         id: String(item.id), //Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
+        title: `Paciente: ${pacienteNome} | Aluno: ${alunoNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
           pacienteId: item.paciente_id,
-          fisioterapeutaId: item.fisioterapeuta_id,
+          alunoId: item.aluno_id,
           horarioId: item.horario_id,
           status: item.status,
           pacienteNome: pacienteNome,
-          fisioterapeutaNome: fisioterapeutaNome,
+          alunoNome: alunoNome,
           horario: horario?.horario || "",
         },
       };
     });
     setEvents(eventos);
-  }, [consulta, pacientes, fisioterapeutas, horarios]);
+  }, [consulta, pacientes, alunos, horarios]);
 
   //Renderiza o componente principal
   return (
@@ -255,7 +247,7 @@ export default function Home() {
                     //Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
                     const topPosition = Math.max(
                       10,
-                      rect.bottom - tooltipHeight
+                      rect.bottom - tooltipHeight,
                     );
                     tooltip.style.top = topPosition + "px";
                   }

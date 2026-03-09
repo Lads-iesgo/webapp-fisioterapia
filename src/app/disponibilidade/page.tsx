@@ -23,7 +23,7 @@ import {
   Consulta,
   Evento,
   Paciente,
-  Fisioterapeuta,
+  Aluno,
   Horario,
 } from "../interfaces/types";
 
@@ -40,12 +40,12 @@ export default function Disponibilidade() {
   const [eventToDelete, setEventToDelete] = useState<{
     id: number | null;
     pacienteNome?: string;
-    fisioterapeutaNome?: string;
+    alunoNome?: string;
     horario?: string;
   } | null>(null);
 
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
@@ -60,7 +60,7 @@ export default function Disponibilidade() {
   //Função para exibir notificações
   function showNotification(
     type: "success" | "error" | "warning",
-    message: string
+    message: string,
   ) {
     setNotification({
       type,
@@ -85,7 +85,7 @@ export default function Disponibilidade() {
     e.preventDefault();
     const novaConsulta: Consulta = {
       paciente_id: newEvent.paciente_id!,
-      fisioterapeuta_id: newEvent.fisioterapeuta_id!,
+      aluno_id: newEvent.aluno_id!,
       horario_id: newEvent.horario_id!,
       data_consulta:
         typeof newEvent.start === "string"
@@ -96,21 +96,18 @@ export default function Disponibilidade() {
 
     //Valida todos os campos antes de enviar
     const pacienteError = validateField("paciente_id", newEvent.paciente_id);
-    const fisioterapeutaError = validateField(
-      "fisioterapeuta_id",
-      newEvent.fisioterapeuta_id
-    );
+    const alunoError = validateField("aluno_id", newEvent.aluno_id);
     const horarioError = validateField("horario_id", newEvent.horario_id);
 
-    if (pacienteError || fisioterapeutaError || horarioError) {
+    if (pacienteError || alunoError || horarioError) {
       setFormErrors({
         paciente_id: pacienteError,
-        fisioterapeuta_id: fisioterapeutaError,
+        aluno_id: alunoError,
         horario_id: horarioError,
       });
       showNotification(
         "warning",
-        "Por favor, preencha todos os campos obrigatórios."
+        "Por favor, preencha todos os campos obrigatórios.",
       );
       return;
     }
@@ -145,7 +142,7 @@ export default function Disponibilidade() {
     setEventToDelete({
       id: Number(data.event.id),
       pacienteNome: data.event.extendedProps?.pacienteNome,
-      fisioterapeutaNome: data.event.extendedProps?.fisioterapeutaNome,
+      alunoNome: data.event.extendedProps?.alunoNome,
       horario: data.event.extendedProps?.horario,
     });
   }
@@ -155,7 +152,7 @@ export default function Disponibilidade() {
     if (!eventToDelete || !eventToDelete.id) {
       showNotification(
         "error",
-        "Não foi possível identificar a consulta para exclusão."
+        "Não foi possível identificar a consulta para exclusão.",
       );
       return;
     }
@@ -166,7 +163,7 @@ export default function Disponibilidade() {
 
       //Atualiza o estado local removendo a consulta excluída
       setConsulta(
-        consulta.filter((item) => Number(item.id) !== eventToDelete.id)
+        consulta.filter((item) => Number(item.id) !== eventToDelete.id),
       );
 
       //Fecha o modal e reseta o estado
@@ -176,13 +173,13 @@ export default function Disponibilidade() {
       //Feedback para o usuário
       showNotification(
         "success",
-        `Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`
+        `Consulta de ${eventToDelete.pacienteNome} excluída com sucesso!`,
       );
     } catch (error) {
       console.error("Erro ao excluir consulta:", error);
       showNotification(
         "error",
-        "Erro ao excluir consulta. Tente novamente mais tarde."
+        "Erro ao excluir consulta. Tente novamente mais tarde.",
       );
     }
   }
@@ -194,7 +191,7 @@ export default function Disponibilidade() {
       title: "",
       start: "",
       id: 0,
-      fisioterapeuta_id: 0,
+      aluno_id: 0,
       paciente_id: 0,
       horario_id: 0,
       status: "",
@@ -206,14 +203,14 @@ export default function Disponibilidade() {
   //Adicione este estado
   const [formErrors, setFormErrors] = useState({
     paciente_id: "",
-    fisioterapeuta_id: "",
+    aluno_id: "",
     horario_id: "",
   });
 
   //Função de validação
   function validateField(
     field: string,
-    value: string | number | null | undefined
+    value: string | number | null | undefined,
   ): string {
     if (!value && value !== 0) {
       // Permitir o valor 0 como válido para campos numéricos
@@ -234,10 +231,10 @@ export default function Disponibilidade() {
       });
   }, []);
 
-  //Efeito para buscar pacientes, fisioterapeutas e horários ao carregar a página
+  //Efeito para buscar pacientes, alunos e horários ao carregar a página
   useEffect(() => {
     api.get("/paciente").then((res) => setPacientes(res.data));
-    api.get("/usuario").then((res) => setFisioterapeutas(res.data));
+    api.get("/aluno").then((res) => setAlunos(res.data));
     api.get("/horario").then((res) => setHorarios(res.data));
   }, []);
 
@@ -245,9 +242,8 @@ export default function Disponibilidade() {
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
-      const fisioterapeuta = fisioterapeutas.find(
-        (f) => f.id === item.fisioterapeuta_id
-      );
+      const aluno = alunos.find((a) => a.id === item.aluno_id);
+
       const horario = horarios.find((h) => h.id === item.horario_id);
 
       // Extrai a data (YYYY-MM-DD) da data_consulta
@@ -273,28 +269,27 @@ export default function Disponibilidade() {
 
       // Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
-      const fisioterapeutaNome =
-        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+      const alunoNome = aluno?.nome_completo ?? "Aluno não informado";
 
       //Criação do evento
       return {
         id: String(item.id), // Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
+        title: `Paciente: ${pacienteNome} | Aluno: ${alunoNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
           pacienteId: item.paciente_id,
-          fisioterapeutaId: item.fisioterapeuta_id,
+          alunoId: item.aluno_id,
           horarioId: item.horario_id,
           status: item.status,
           pacienteNome: pacienteNome,
-          fisioterapeutaNome: fisioterapeutaNome,
+          alunoNome: alunoNome,
           horario: horario?.horario || "",
         },
       };
     });
     setEvents(eventos);
-  }, [consulta, pacientes, fisioterapeutas, horarios]);
+  }, [consulta, pacientes, alunos, horarios]);
 
   return (
     <>
@@ -308,8 +303,8 @@ export default function Disponibilidade() {
           notification.type === "success"
             ? "bg-green-50 text-green-800 border-l-4 border-green-500"
             : notification.type === "error"
-            ? "bg-red-50 text-red-800 border-l-4 border-red-500"
-            : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"
+              ? "bg-red-50 text-red-800 border-l-4 border-red-500"
+              : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"
         }`}
         style={{
           zIndex: 9999,
@@ -340,8 +335,8 @@ export default function Disponibilidade() {
                   notification.type === "success"
                     ? "text-green-500 hover:bg-green-100"
                     : notification.type === "error"
-                    ? "text-red-500 hover:bg-red-100"
-                    : "text-yellow-500 hover:bg-yellow-100"
+                      ? "text-red-500 hover:bg-red-100"
+                      : "text-yellow-500 hover:bg-yellow-100"
                 }`}
               >
                 <span className="sr-only">Fechar</span>
@@ -398,9 +393,8 @@ export default function Disponibilidade() {
                     <p><strong>Paciente:</strong> ${
                       info.event.extendedProps.pacienteNome || "Não informado"
                     }</p>
-                    <p><strong>Fisioterapeuta:</strong> ${
-                      info.event.extendedProps.fisioterapeutaNome ||
-                      "Não informado"
+                    <p><strong>Aluno:</strong> ${
+                      info.event.extendedProps.alunoNome || "Não informado"
                     }</p>
                     <p><strong>Horário:</strong> ${
                       info.event.extendedProps.horario || "Não informado"
@@ -449,7 +443,7 @@ export default function Disponibilidade() {
                     // Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
                     const topPosition = Math.max(
                       10,
-                      rect.bottom - tooltipHeight
+                      rect.bottom - tooltipHeight,
                     );
                     tooltip.style.top = topPosition + "px";
                   }
@@ -562,11 +556,8 @@ export default function Disponibilidade() {
                                 {eventToDelete?.pacienteNome ||
                                   "paciente não identificado"}
                               </strong>{" "}
-                              com{" "}
-                              <strong>
-                                {eventToDelete?.fisioterapeutaNome}
-                              </strong>{" "}
-                              às <strong>{eventToDelete?.horario}</strong>?
+                              com <strong>{eventToDelete?.alunoNome}</strong> às{" "}
+                              <strong>{eventToDelete?.horario}</strong>?
                             </p>
                           </div>
                         </div>
@@ -660,7 +651,7 @@ export default function Disponibilidade() {
                                     ...formErrors,
                                     paciente_id: validateField(
                                       "paciente_id",
-                                      value
+                                      value,
                                     ),
                                   });
                                 }}
@@ -686,43 +677,38 @@ export default function Disponibilidade() {
                             </div>
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Fisioterapeuta
+                                Aluno
                               </label>
                               <Select
-                                value={newEvent.fisioterapeuta_id ?? ""}
+                                value={newEvent.aluno_id ?? ""}
                                 onChange={(e) => {
                                   const value = Number(e.target.value);
                                   setNewEvent({
                                     ...newEvent,
-                                    fisioterapeuta_id: value,
+                                    aluno_id: value,
                                   });
                                   setFormErrors({
                                     ...formErrors,
-                                    fisioterapeuta_id: validateField(
-                                      "fisioterapeuta_id",
-                                      value
-                                    ),
+                                    aluno_id: validateField("aluno_id", value),
                                   });
                                 }}
                                 required
                                 className={`w-full rounded-md border ${
-                                  formErrors.fisioterapeuta_id
+                                  formErrors.aluno_id
                                     ? "border-red-500"
                                     : "border-gray-300"
                                 } px-4 py-3 text-base select-custom`}
                               >
-                                <option value="">
-                                  Selecione o fisioterapeuta
-                                </option>
-                                {fisioterapeutas.map((f) => (
+                                <option value="">Selecione o Aluno</option>
+                                {alunos.map((f) => (
                                   <option key={f.id} value={f.id}>
                                     {f.nome_completo}
                                   </option>
                                 ))}
                               </Select>
-                              {formErrors.fisioterapeuta_id && (
+                              {formErrors.aluno_id && (
                                 <p className="mt-1 text-sm text-red-600">
-                                  {formErrors.fisioterapeuta_id}
+                                  {formErrors.aluno_id}
                                 </p>
                               )}
                             </div>
@@ -742,7 +728,7 @@ export default function Disponibilidade() {
                                     ...formErrors,
                                     horario_id: validateField(
                                       "horario_id",
-                                      value
+                                      value,
                                     ),
                                   });
                                 }}
