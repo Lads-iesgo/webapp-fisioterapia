@@ -23,7 +23,7 @@ import {
   Consulta,
   Evento,
   Paciente,
-  Aluno,
+  Fisioterapeuta,
   Horario,
 } from "../interfaces/types";
 
@@ -45,7 +45,7 @@ export default function Disponibilidade() {
   } | null>(null);
 
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "warning";
@@ -85,7 +85,7 @@ export default function Disponibilidade() {
     e.preventDefault();
     const novaConsulta: Consulta = {
       paciente_id: newEvent.paciente_id!,
-      aluno_id: newEvent.aluno_id!,
+      fisioterapeuta_id: newEvent.fisioterapeuta_id!,
       horario_id: newEvent.horario_id!,
       data_consulta:
         typeof newEvent.start === "string"
@@ -96,13 +96,16 @@ export default function Disponibilidade() {
 
     //Valida todos os campos antes de enviar
     const pacienteError = validateField("paciente_id", newEvent.paciente_id);
-    const alunoError = validateField("aluno_id", newEvent.aluno_id);
+    const fisioterapeutaError = validateField(
+      "fisioterapeuta_id",
+      newEvent.fisioterapeuta_id,
+    );
     const horarioError = validateField("horario_id", newEvent.horario_id);
 
-    if (pacienteError || alunoError || horarioError) {
+    if (pacienteError || fisioterapeutaError || horarioError) {
       setFormErrors({
         paciente_id: pacienteError,
-        aluno_id: alunoError,
+        fisioterapeuta_id: fisioterapeutaError,
         horario_id: horarioError,
       });
       showNotification(
@@ -191,7 +194,7 @@ export default function Disponibilidade() {
       title: "",
       start: "",
       id: 0,
-      aluno_id: 0,
+      fisioterapeuta_id: 0,
       paciente_id: 0,
       horario_id: 0,
       status: "",
@@ -203,7 +206,7 @@ export default function Disponibilidade() {
   //Adicione este estado
   const [formErrors, setFormErrors] = useState({
     paciente_id: "",
-    aluno_id: "",
+    fisioterapeuta_id: "",
     horario_id: "",
   });
 
@@ -234,7 +237,7 @@ export default function Disponibilidade() {
   //Efeito para buscar pacientes, alunos e horários ao carregar a página
   useEffect(() => {
     api.get("/paciente").then((res) => setPacientes(res.data));
-    api.get("/aluno").then((res) => setAlunos(res.data));
+    api.get("/usuario").then((res) => setFisioterapeutas(res.data));
     api.get("/horario").then((res) => setHorarios(res.data));
   }, []);
 
@@ -242,7 +245,9 @@ export default function Disponibilidade() {
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
-      const aluno = alunos.find((a) => a.id === item.aluno_id);
+      const fisioterapeuta = fisioterapeutas.find(
+        (f) => f.id === item.fisioterapeuta_id,
+      );
 
       const horario = horarios.find((h) => h.id === item.horario_id);
 
@@ -269,27 +274,28 @@ export default function Disponibilidade() {
 
       // Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
-      const alunoNome = aluno?.nome_completo ?? "Aluno não informado";
+      const fisioterapeutaNome =
+        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
 
       //Criação do evento
       return {
         id: String(item.id), // Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Aluno: ${alunoNome}`,
+        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
           pacienteId: item.paciente_id,
-          alunoId: item.aluno_id,
+          fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
           pacienteNome: pacienteNome,
-          alunoNome: alunoNome,
+          fisioterapeutaNome: fisioterapeutaNome,
           horario: horario?.horario || "",
         },
       };
     });
     setEvents(eventos);
-  }, [consulta, pacientes, alunos, horarios]);
+  }, [consulta, pacientes, fisioterapeutas, horarios]);
 
   return (
     <>
@@ -680,35 +686,38 @@ export default function Disponibilidade() {
                                 Aluno
                               </label>
                               <Select
-                                value={newEvent.aluno_id ?? ""}
+                                value={newEvent.fisioterapeuta_id ?? ""}
                                 onChange={(e) => {
                                   const value = Number(e.target.value);
                                   setNewEvent({
                                     ...newEvent,
-                                    aluno_id: value,
+                                    fisioterapeuta_id: value,
                                   });
                                   setFormErrors({
                                     ...formErrors,
-                                    aluno_id: validateField("aluno_id", value),
+                                    fisioterapeuta_id: validateField(
+                                      "fisioterapeuta_id",
+                                      value,
+                                    ),
                                   });
                                 }}
                                 required
                                 className={`w-full rounded-md border ${
-                                  formErrors.aluno_id
+                                  formErrors.fisioterapeuta_id
                                     ? "border-red-500"
                                     : "border-gray-300"
                                 } px-4 py-3 text-base select-custom`}
                               >
                                 <option value="">Selecione o Aluno</option>
-                                {alunos.map((f) => (
+                                {fisioterapeutas.map((f) => (
                                   <option key={f.id} value={f.id}>
                                     {f.nome_completo}
                                   </option>
                                 ))}
                               </Select>
-                              {formErrors.aluno_id && (
+                              {formErrors.fisioterapeuta_id && (
                                 <p className="mt-1 text-sm text-red-600">
-                                  {formErrors.aluno_id}
+                                  {formErrors.fisioterapeuta_id}
                                 </p>
                               )}
                             </div>

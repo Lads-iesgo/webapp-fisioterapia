@@ -8,15 +8,10 @@ import NavBar from "../components/navBar"; // Importa de src/app/components/navB
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
 import api from "../services/api";
+import { Fisioterapeuta } from "../interfaces/types";
 
 //Criação de interfaces para os Pacientes
 interface Paciente {
-  id: number;
-  nome_completo: string;
-}
-
-//Criação de interfaces para os Alunos
-interface Aluno {
   id: number;
   nome_completo: string;
 }
@@ -28,13 +23,13 @@ interface Horario {
 }
 
 export default function PaginaCadastrarConsulta() {
-  //Estados para armazenar os dados dos pacientes, alunos e horários
+  //Estados para armazenar os dados dos pacientes, fisioterapeutas e horários
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
 
   const [paciente, setPaciente] = useState("");
-  const [aluno, setAluno] = useState("");
+  const [fisioterapeuta, setFisioterapeuta] = useState("");
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,10 +38,12 @@ export default function PaginaCadastrarConsulta() {
     texto: string;
   } | null>(null);
 
-  //Efeito para buscar os dados dos pacientes, alunos e horários ao carregar a página
+  //Efeito para buscar os dados dos pacientes, fisioterapeutas e horários ao carregar a página
   useEffect(() => {
     api.get<Paciente[]>("/paciente").then((res) => setPacientes(res.data));
-    api.get<Aluno[]>("/usuario/alunos").then((res) => setAlunos(res.data));
+    api
+      .get<Fisioterapeuta[]>("/usuario")
+      .then((res) => setFisioterapeutas(res.data));
     api.get<Horario[]>("/horario").then((res) => setHorarios(res.data));
   }, []);
 
@@ -55,9 +52,11 @@ export default function PaginaCadastrarConsulta() {
     return pacientes.find((p) => p.id === Number(id))?.nome_completo || "";
   }
 
-  //Função para obter o nome do aluno
-  function getNomeAluno(id: string) {
-    return alunos.find((a) => a.id === Number(id))?.nome_completo || "";
+  //Função para obter o nome do fisioterapeuta
+  function getNomeFisioterapeuta(id: string) {
+    return (
+      fisioterapeutas.find((f) => f.id === Number(id))?.nome_completo || ""
+    );
   }
 
   //Função para obter o horário formatado
@@ -84,7 +83,7 @@ export default function PaginaCadastrarConsulta() {
       // Verifica se todos os campos estão preenchidos
       await api.post("/consulta", {
         paciente_id: Number(paciente),
-        aluno_id: Number(aluno),
+        fisioterapeuta_id: Number(fisioterapeuta),
         data_consulta: data,
         horario_id: Number(horario),
       });
@@ -93,14 +92,14 @@ export default function PaginaCadastrarConsulta() {
         tipo: "sucesso",
         texto: `Consulta cadastrada com sucesso!
     Paciente: ${getNomePaciente(paciente)}
-    Fisioterapeuta: ${getNomeAluno(aluno)}
+    Fisioterapeuta: ${getNomeFisioterapeuta(fisioterapeuta)}
     Data: ${formatarData(data)}
     Horário: ${getHorarioTexto(horario)}`,
       });
 
       //Limpa os campos do formulário após o sucesso
       setPaciente("");
-      setAluno("");
+      setFisioterapeuta("");
       setData("");
       setHorario("");
     } catch (error: unknown) {
@@ -159,14 +158,14 @@ export default function PaginaCadastrarConsulta() {
                   </span>
                   <select
                     required
-                    value={aluno}
-                    onChange={(e) => setAluno(e.target.value)}
+                    value={fisioterapeuta}
+                    onChange={(e) => setFisioterapeuta(e.target.value)}
                     className="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-black"
                   >
                     <option value="" disabled>
                       Selecione o aluno
                     </option>
-                    {alunos.map((f) => (
+                    {fisioterapeutas.map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.nome_completo}
                       </option>

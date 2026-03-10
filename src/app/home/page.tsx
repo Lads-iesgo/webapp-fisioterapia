@@ -16,14 +16,19 @@ import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 
 //Importação das tipagens necessárias
-import { Consulta, Paciente, Aluno, Horario } from "../interfaces/types";
+import {
+  Consulta,
+  Paciente,
+  Fisioterapeuta,
+  Horario,
+} from "../interfaces/types";
 
 export default function Home() {
   //Definindo os estados para armazenar os dados
   const [consulta, setConsulta] = useState<Consulta[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [fisioterapeutas, setFisioterapeutas] = useState<Fisioterapeuta[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [nomeUsuario, setNomeUsuario] = useState("");
 
@@ -87,7 +92,7 @@ export default function Home() {
     ])
       .then(([resPacientes, resUsuarios, resHorarios]) => {
         setPacientes(resPacientes.data);
-        setAlunos(resUsuarios.data);
+        setFisioterapeutas(resUsuarios.data);
         setHorarios(resHorarios.data);
       })
       .catch((error) => {
@@ -103,7 +108,9 @@ export default function Home() {
   useEffect(() => {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
-      const aluno = alunos.find((f) => f.id === item.aluno_id);
+      const fisioterapeuta = fisioterapeutas.find(
+        (f) => f.id === item.fisioterapeuta_id,
+      );
       const horario = horarios.find((h) => h.id === item.horario_id);
 
       //Extrai a data (YYYY-MM-DD) da data_consulta
@@ -129,27 +136,28 @@ export default function Home() {
 
       //Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
-      const alunoNome = aluno?.nome_completo ?? "Aluno não informado";
+      const fisioterapeutaNome =
+        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
 
       //Retorna o objeto de evento formatado
       return {
         id: String(item.id), //Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Aluno: ${alunoNome}`,
+        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
           pacienteId: item.paciente_id,
-          alunoId: item.aluno_id,
+          fisioterapeutaId: item.fisioterapeuta_id,
           horarioId: item.horario_id,
           status: item.status,
           pacienteNome: pacienteNome,
-          alunoNome: alunoNome,
+          fisioterapeutaNome: fisioterapeutaNome,
           horario: horario?.horario || "",
         },
       };
     });
     setEvents(eventos);
-  }, [consulta, pacientes, alunos, horarios]);
+  }, [consulta, pacientes, fisioterapeutas, horarios]);
 
   //Renderiza o componente principal
   return (
