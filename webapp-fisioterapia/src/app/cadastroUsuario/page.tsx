@@ -194,7 +194,7 @@ export default function CadastroUsuario() {
 
   //Renderizar o componente
   return (
-    <div className="bg-white min-h-screen flex flex-row overflow-hidden ml-[288px]">
+    <div className="bg-white min-h-screen flex flex-row overflow-hidden  w-full md:pl-72 transition-all duration-300">
       <NavBar />
       <div className="flex flex-col flex-1">
         <TopBar title="Cadastro de usuário" />

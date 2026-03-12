@@ -26,7 +26,7 @@ export default function NavBar() {
   };
 
   return (
-    <div className="bg-blue-900 fixed left-0 top-0 w-72 h-screen overflow-y-auto z-10">
+    <div className="hidden md:flex bg-blue-900 fixed left-0 top-0 w-72 h-screen overflow-y-auto z-10">
       <div className="flex flex-col h-full">
         {/* Logo e título no topo */}
         <div className="flex flex-col items-center py-8">

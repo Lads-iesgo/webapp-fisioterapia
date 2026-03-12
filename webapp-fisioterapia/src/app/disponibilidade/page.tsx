@@ -370,7 +370,7 @@ export default function Disponibilidade() {
       {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
-          <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px]">
+          <div className="w-full px-2 mt-20 md:ml-[288px] md:w-[calc(85vw-320px)] md:px-0">
             <FullCalendar
               //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
