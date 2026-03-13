@@ -137,12 +137,12 @@ export default function Home() {
       //Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
       const fisioterapeutaNome =
-        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+        fisioterapeuta?.nome_completo ?? "Aluno não informado";
 
       //Retorna o objeto de evento formatado
       return {
         id: String(item.id), //Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
+        title: `Paciente: ${pacienteNome} | Aluno: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
@@ -204,7 +204,7 @@ export default function Home() {
                     <p><strong>Paciente:</strong> ${
                       info.event.extendedProps.pacienteNome || "Não informado"
                     }</p>
-                    <p><strong>Fisioterapeuta:</strong> ${
+                    <p><strong>Aluno:</strong> ${
                       info.event.extendedProps.fisioterapeutaNome ||
                       "Não informado"
                     }</p>
