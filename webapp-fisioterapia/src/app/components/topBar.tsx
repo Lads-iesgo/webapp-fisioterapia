@@ -31,32 +31,16 @@ export default function TopBar(props: TitleProps) {
   return (
     <>
       {/* TopBar Principal */}
-      <div className="fixed top-0 left-0 md:left-[288px] w-full md:w-[calc(100vw-288px)] h-16 bg-blue-100 flex items-center justify-between md:justify-center px-4 md:px-8 shadow z-50">
+      <div className="fixed top-0 left-0 md:left-[288px] w-full md:w-[calc(100vw-288px)] h-16 bg-blue-100 flex items-center px-4 md:px-8 shadow z-50">
         
-        {/* 1. Lado Esquerdo: Logo (md:hidden faz sumir no Desktop) */}
-        <div className="flex-1 flex justify-start md:hidden">
-          <div 
-            className="w-[90px] h-[34px] bg-blue-900" 
-            style={{
-              maskImage: 'url("/logo-iesgo.png")',
-              WebkitMaskImage: 'url("/logo-iesgo.png")',
-              maskRepeat: 'no-repeat',
-              WebkitMaskRepeat: 'no-repeat',
-              maskSize: 'contain',
-              WebkitMaskSize: 'contain',
-              maskPosition: 'center left',
-              WebkitMaskPosition: 'center left',
-            }}
-            aria-label="Logo IESGO"
-          />
-        </div>
 
-        {/* 2. Centro: Título (Perfeitamente centralizado em TODAS as telas) */}
-        <div className="text-center text-blue-900 text-xl md:text-2xl font-bold whitespace-nowrap">
-          {props.title}
-        </div>
 
-        {/* 3. Lado Direito: Botão Hambúrguer (md:hidden faz sumir no Desktop) */}
+        {/* 1. Centro: Título (Perfeitamente centralizado em TODAS as telas) */}
+         <div className="absolute left-1/2 transform -translate-x-1/2 text-blue-900 text-xl md:text-2xl font-bold whitespace-nowrap">
+    {props.title}
+  </div>
+
+        {/* 2. Lado Direito: Botão Hambúrguer (md:hidden faz sumir no Desktop) */}
         <div className="flex-1 flex justify-end md:hidden">
           <button 
             className="text-blue-900 p-2 hover:bg-blue-200 rounded-md transition-all"
@@ -100,14 +84,14 @@ export default function TopBar(props: TitleProps) {
             Cadastro de Consulta
           </Link>
            {/* Botão de logout no final da barra */}
-        <div className="px-4 py-6 border-t border-blue-800">
+        <div className="w-full px-4 py-6 border-t border-blue-800 flex justify-center">
           <button
             onClick={handleLogout}
-            className="flex items-center w-full text-gray-200 hover:bg-blue-800 rounded-lg px-4 py-3 transition-colors"
-          >
+            className="flex items-center justify-center text-gray-200 hover:bg-blue-800 rounded-lg px-6 py-3 transition-colors">
+          
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-3"
+              className="h-6 w-6 mr-3"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -117,7 +101,7 @@ export default function TopBar(props: TitleProps) {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-lg font-medium">Sair</span>
+            <span className="text-2xl font-semibold ">Sair</span>
           </button>
         </div>
         </nav>

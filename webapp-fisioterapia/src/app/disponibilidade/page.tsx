@@ -274,12 +274,12 @@ export default function Disponibilidade() {
       // Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
       const fisioterapeutaNome =
-        fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+        fisioterapeuta?.nome_completo ?? "Usuário não informado";
 
       //Criação do evento
       return {
         id: String(item.id), // Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
+        title: `Paciente: ${pacienteNome} | Usuário: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
@@ -398,7 +398,7 @@ export default function Disponibilidade() {
                     <p><strong>Paciente:</strong> ${
                       info.event.extendedProps.pacienteNome || "Não informado"
                     }</p>
-                    <p><strong>Fisioterapeuta:</strong> ${
+                    <p><strong>Usuário:</strong> ${
                       info.event.extendedProps.fisioterapeutaNome ||
                       "Não informado"
                     }</p>
@@ -412,6 +412,8 @@ export default function Disponibilidade() {
                 tooltip.style.display = "none";
 
                 document.body.appendChild(tooltip);
+
+                
 
                 // Mostra o tooltip no hover com verificação de posição
                 info.el.addEventListener("mouseenter", () => {
@@ -523,7 +525,7 @@ export default function Disponibilidade() {
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
@@ -612,7 +614,7 @@ export default function Disponibilidade() {
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
@@ -622,7 +624,7 @@ export default function Disponibilidade() {
                   leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                   leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all w-auto">
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all w-auto w-[95%]">
                     <div>
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                         <CheckIcon
@@ -639,7 +641,7 @@ export default function Disponibilidade() {
                         </Dialog.Title>
                         <form
                           onSubmit={handleSubmit}
-                          className="mt-4 flex flex-col space-y-4 w-full"
+                          className="mt-4 flex flex-col space-y-4 w-full items-center"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                             <div className="w-full">
@@ -686,7 +688,7 @@ export default function Disponibilidade() {
                             </div>
                             <div className="w-full">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Fisioterapeuta
+                                Usuário
                               </label>
                               <Select
                                 value={newEvent.fisioterapeuta_id ?? ""}
@@ -712,7 +714,7 @@ export default function Disponibilidade() {
                                 } px-4 py-3 text-base select-custom`}
                               >
                                 <option value="">
-                                  Selecione o fisioterapeuta
+                                  Selecione o Usuário
                                 </option>
                                 {fisioterapeutas.map((f) => (
                                   <option key={f.id} value={f.id}>
