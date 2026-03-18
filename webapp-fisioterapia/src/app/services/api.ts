@@ -3,7 +3,7 @@ import axios from "axios";
 
 //Criação de uma instância do axios com a URL base da API
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.65.253.32:3333",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
 });
 
 //Interceptor para adicionar o token em todas requisições
