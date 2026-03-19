@@ -390,6 +390,11 @@ export default function Disponibilidade() {
               editable={true}
               //Configuração do tooltip
               eventDidMount={(info) => {
+                // Verifica se é mobile (tela menor ou igual a 768px). 
+        // Se for, encerra a função aqui mesmo e não cria o tooltip.
+        if (window.innerWidth <= 768) {
+          return; 
+        }
                 //Cria um elemento tooltip personalizado
                 const tooltip = document.createElement("div");
                 tooltip.className = "fc-event-tooltip";
