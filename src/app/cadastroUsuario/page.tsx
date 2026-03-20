@@ -134,6 +134,22 @@ export default function CadastroUsuario() {
     setMensagem(null);
     setLoading(true);
 
+    // Validação de CPF e CEP (garantir quantidade exata de números)
+const cpfNumeros = form.cpf.replace(/\D/g, ""); // remove pontos e traços
+
+
+// Se CPF não tiver exatamente 11 números, bloqueia envio
+if (cpfNumeros.length !== 11) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CPF deve conter exatamente 11 números.",
+  });
+  setLoading(false);
+  return; // impede envio
+}
+
+
+
     try {
       //Preparar dados para API conforme userController.ts
       const dadosUsuario = {
