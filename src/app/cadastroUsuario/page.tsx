@@ -132,7 +132,7 @@ export default function CadastroUsuario() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
-    setLoading(true);
+    setLoading(true)
 
     try {
       //Preparar dados para API conforme userController.ts
