@@ -146,6 +146,40 @@ export default function CadastrarPaciente() {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
+    
+  //  VALIDAÇÃO DE CPF E CEP
+const cpfNumeros = form.cpf.replace(/\D/g, ""); // remove máscara
+const cepNumeros = form.cep.replace(/\D/g, ""); // remove máscara
+
+ // CPF inválido
+if (cpfNumeros.length !== 11) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CPF deve conter exatamente 11 números.",
+  });
+  setLoading(false);
+  return;
+}
+
+//  CEP inválido
+if (cepNumeros.length !== 8) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CEP deve conter exatamente 8 números.",
+    
+  });
+  setLoading(false);
+  return;
+}
+//  CEP inválido
+if (cepNumeros.length !== 8) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CEP deve conter exatamente 8 números.",
+  });
+  setLoading(false);
+  return;
+}
 
     //Validação simples para verificar se o CPF já está preenchido
     try {

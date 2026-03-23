@@ -132,7 +132,18 @@ export default function CadastroUsuario() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
-    setLoading(true);
+    setLoading(true)
+
+    // 🔒 VALIDAÇÃO DE CPF E CEP
+const cpfNumeros = form.cpf.replace(/\D/g, ""); // remove máscara
+// ❌ CPF inválido
+if (cpfNumeros.length !== 11) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CPF deve conter exatamente 11 números.",
+  });
+  setLoading(false);
+  return;
 
     try {
       //Preparar dados para API conforme userController.ts
