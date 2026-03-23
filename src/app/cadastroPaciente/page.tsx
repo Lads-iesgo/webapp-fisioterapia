@@ -171,6 +171,15 @@ if (cepNumeros.length !== 8) {
   setLoading(false);
   return;
 }
+//  CEP inválido
+if (cepNumeros.length !== 8) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CEP deve conter exatamente 8 números.",
+  });
+  setLoading(false);
+  return;
+}
 
     //Validação simples para verificar se o CPF já está preenchido
     try {
