@@ -134,9 +134,9 @@ export default function CadastroUsuario() {
     setMensagem(null);
     setLoading(true)
 
-    // 🔒 VALIDAÇÃO DE CPF E CEP
+    // VALIDAÇÃO DE CPF E CEP
 const cpfNumeros = form.cpf.replace(/\D/g, ""); // remove máscara
-// ❌ CPF inválido
+// CPF inválido
 if (cpfNumeros.length !== 11) {
   setMensagem({
     tipo: "erro",
