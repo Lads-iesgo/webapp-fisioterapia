@@ -38,6 +38,7 @@ export default function CadastroUsuario() {
   //Buscar perfis da API quando o componente for montado
   useEffect(() => {
     async function buscarPerfis() {
+    
       try {
         setLoadingPerfis(true);
         const response = await api.get("/perfil");
@@ -133,7 +134,18 @@ export default function CadastroUsuario() {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
+    
+// CEP inválido (formato)
+const regexCEP = /^[0-9]{5}-?[0-9]{3}$/;
 
+if (!regexCEP.test(form.cep)) {
+  setMensagem({
+    tipo: "erro",
+    texto: "CEP inválido. Use o formato 00000-000.",
+  });
+  setLoading(false);
+  return;
+}
     try {
       //Preparar dados para API conforme userController.ts
       const dadosUsuario = {
