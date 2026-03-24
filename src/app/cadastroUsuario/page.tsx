@@ -143,7 +143,7 @@ if (cpfNumeros.length !== 11) {
     texto: "CPF deve conter exatamente 11 números.",
   });
   setLoading(false);
-  return;
+  return;}
 
     try {
       //Preparar dados para API conforme userController.ts
