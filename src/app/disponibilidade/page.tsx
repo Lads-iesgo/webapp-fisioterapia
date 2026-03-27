@@ -36,6 +36,7 @@ export default function Disponibilidade() {
     start: "",
   });
   const [showModal, setShowModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<{
     id: number | null;
@@ -77,7 +78,31 @@ export default function Disponibilidade() {
   //Função para lidar com o clique na data
   function handleDateClick(arg: { date: Date }) {
     setNewEvent({ ...newEvent, start: arg.date, id: new Date().getTime() });
-    setShowModal(true);
+    setShowActionModal(true);
+  }
+
+  //Função para tornar o dia indisponível
+  function handleMakeUnavailable() {
+    const dataHoraISO =
+      typeof newEvent.start === "string"
+        ? new Date(newEvent.start).toISOString()
+        : newEvent.start.toISOString();
+
+    const bloqueardia: EventInput = {
+      id: `block-${new Date().getTime()}`,
+      title: "Dia Indisponível",
+      start: dataHoraISO,
+      allDay: true,
+      backgroundColor: "#EF4444",
+      borderColor: "#EF4444",
+      extendedProps: {
+        status: "indisponivel",
+      },
+    };
+
+    setEvents((prev) => [...prev, bloqueardia]);
+    setShowActionModal(false);
+    showNotification("success", "Dia marcado como indisponível.");
   }
 
   //Função para lidar com o envio do formulário
@@ -189,6 +214,7 @@ export default function Disponibilidade() {
 
   //Função para fechar o modal e resetar o estado
   function handleCloseModal() {
+    setShowActionModal(false);
     setShowModal(false);
     setNewEvent({
       title: "",
@@ -593,6 +619,85 @@ export default function Disponibilidade() {
             </div>
           </Dialog>
         </Transition.Root>
+        {/* Modal de Escolha de Ação */}
+        <Transition.Root show={showActionModal} as={Fragment}>
+          <Dialog
+            as="div"
+            className="relative z-10"
+            onClose={setShowActionModal}
+          >
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 backdrop-blur-xs transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 z-10 overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
+                    <div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-base font-semibold leading-6 text-gray-900"
+                        >
+                          Selecione uma ação
+                        </Dialog.Title>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500">
+                            O que você deseja fazer para este dia?
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-5 sm:mt-6 flex flex-col space-y-3">
+                      <button
+                        type="button"
+                        className="inline-flex w-full justify-center rounded-md bg-blue-950 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-950"
+                        onClick={() => {
+                          setShowActionModal(false);
+                          setShowModal(true);
+                        }}
+                      >
+                        Cadastrar consulta
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                        onClick={handleMakeUnavailable}
+                      >
+                        Tornar dia indisponível
+                      </button>
+                      <button
+                        type="button"
+                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                        onClick={() => setShowActionModal(false)}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition.Root>
+
         {/* Modal de adicionar nova consulta */}
         <Transition.Root show={showModal} as={Fragment}>
           <Dialog as="div" className="relative z-10" onClose={setShowModal}>
