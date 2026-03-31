@@ -20,11 +20,11 @@ import TopBar from "../components/topBar";
 
 //Importação das tipagens necessárias
 import {
-  Consulta,
-  Evento,
-  Paciente,
-  Fisioterapeuta,
-  Horario,
+	Consulta,
+	Evento,
+	Paciente,
+	Fisioterapeuta,
+	Horario,
 } from "../interfaces/types";
 
 export default function Disponibilidade() {
@@ -397,7 +397,7 @@ export default function Disponibilidade() {
       {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
-          <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px]">
+          <div className="w-full px-2 mt-20 md:ml-[288px] md:w-[calc(85vw-320px)] md:px-0">
             <FullCalendar
               //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -417,20 +417,25 @@ export default function Disponibilidade() {
               editable={true}
               //Configuração do tooltip
               eventDidMount={(info) => {
-                //Cria um elemento tooltip personalizado
-                const tooltip = document.createElement("div");
-                tooltip.className = "fc-event-tooltip";
-                tooltip.innerHTML = `
+								// Verifica se é mobile (tela menor ou igual a 768px).
+								// Se for, encerra a função aqui mesmo e não cria o tooltip.
+								if (window.innerWidth <= 768) {
+									return;
+								}
+								//Cria um elemento tooltip personalizado
+								const tooltip = document.createElement("div");
+								tooltip.className = "fc-event-tooltip";
+								tooltip.innerHTML = `
                   <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
                     <p><strong>Paciente:</strong> ${
-                      info.event.extendedProps.pacienteNome || "Não informado"
-                    }</p>
+											info.event.extendedProps.pacienteNome || "Não informado"
+										}</p>
                     <p><strong>Aluno:</strong> ${
-                      info.event.extendedProps.alunoNome || "Não informado"
-                    }</p>
+											info.event.extendedProps.alunoNome || "Não informado"
+										}</p>
                     <p><strong>Horário:</strong> ${
-                      info.event.extendedProps.horario || "Não informado"
-                    }</p>
+											info.event.extendedProps.horario || "Não informado"
+										}</p>
                   </div>
                 `;
                 tooltip.style.position = "absolute";
@@ -549,7 +554,7 @@ export default function Disponibilidade() {
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
@@ -714,7 +719,7 @@ export default function Disponibilidade() {
             </Transition.Child>
 
             <div className="fixed inset-0 z-10 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
@@ -724,7 +729,7 @@ export default function Disponibilidade() {
                   leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                   leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all w-auto">
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all w-auto w-[95%]">
                     <div>
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                         <CheckIcon
@@ -741,7 +746,7 @@ export default function Disponibilidade() {
                         </Dialog.Title>
                         <form
                           onSubmit={handleSubmit}
-                          className="mt-4 flex flex-col space-y-4 w-full"
+                          className="mt-4 flex flex-col space-y-4 w-full items-center"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                             <div className="w-full">
@@ -750,149 +755,149 @@ export default function Disponibilidade() {
                               </label>
                               {/* Importação dinâmica dos pacientes, dos
                               fisioterapeutas e dos horários cadastrados */}
-                              <Select
-                                value={newEvent.paciente_id ?? ""}
-                                onChange={(e) => {
-                                  const value = Number(e.target.value);
-                                  setNewEvent({
-                                    ...newEvent,
-                                    paciente_id: value,
-                                  });
-                                  setFormErrors({
-                                    ...formErrors,
-                                    paciente_id: validateField(
-                                      "paciente_id",
-                                      value,
-                                    ),
-                                  });
-                                }}
-                                required
-                                className={`w-full rounded-md border ${
-                                  formErrors.paciente_id
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                                } px-4 py-3 text-base select-custom`}
-                              >
-                                <option value="">Selecione o paciente</option>
-                                {pacientes.map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.nome_completo}
-                                  </option>
-                                ))}
-                              </Select>
-                              {formErrors.paciente_id && (
-                                <p className="mt-1 text-sm text-red-600">
-                                  {formErrors.paciente_id}
-                                </p>
-                              )}
-                            </div>
-                            <div className="w-full">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Aluno
-                              </label>
-                              <Select
-                                value={newEvent.fisioterapeuta_id ?? ""}
-                                onChange={(e) => {
-                                  const value = Number(e.target.value);
-                                  setNewEvent({
-                                    ...newEvent,
-                                    fisioterapeuta_id: value,
-                                  });
-                                  setFormErrors({
-                                    ...formErrors,
-                                    fisioterapeuta_id: validateField(
-                                      "fisioterapeuta_id",
-                                      value,
-                                    ),
-                                  });
-                                }}
-                                required
-                                className={`w-full rounded-md border ${
-                                  formErrors.fisioterapeuta_id
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                                } px-4 py-3 text-base select-custom`}
-                              >
-                                <option value="">Selecione o Aluno</option>
-                                {fisioterapeutas.map((f) => (
-                                  <option key={f.id} value={f.id}>
-                                    {f.nome_completo}
-                                  </option>
-                                ))}
-                              </Select>
-                              {formErrors.fisioterapeuta_id && (
-                                <p className="mt-1 text-sm text-red-600">
-                                  {formErrors.fisioterapeuta_id}
-                                </p>
-                              )}
-                            </div>
-                            <div className="w-full">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Horário
-                              </label>
-                              <Select
-                                value={newEvent.horario_id ?? ""}
-                                onChange={(e) => {
-                                  const value = Number(e.target.value);
-                                  setNewEvent({
-                                    ...newEvent,
-                                    horario_id: value,
-                                  });
-                                  setFormErrors({
-                                    ...formErrors,
-                                    horario_id: validateField(
-                                      "horario_id",
-                                      value,
-                                    ),
-                                  });
-                                }}
-                                required
-                                className={`w-full rounded-md border ${
-                                  formErrors.horario_id
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                                } px-4 py-3 text-base select-custom`}
-                              >
-                                <option value="">Selecione o horário</option>
-                                {horarios.map((h) => (
-                                  <option key={h.id} value={h.id}>
-                                    {h.horario}
-                                  </option>
-                                ))}
-                              </Select>
-                              {formErrors.horario_id && (
-                                <p className="mt-1 text-sm text-red-600">
-                                  {formErrors.horario_id}
-                                </p>
-                              )}
-                            </div>
-                          </div>
+															<Select
+																value={newEvent.paciente_id ?? ""}
+																onChange={(e) => {
+																	const value = Number(e.target.value);
+																	setNewEvent({
+																		...newEvent,
+																		paciente_id: value,
+																	});
+																	setFormErrors({
+																		...formErrors,
+																		paciente_id: validateField(
+																			"paciente_id",
+																			value,
+																		),
+																	});
+																}}
+																required
+																className={`w-full rounded-md border ${
+																	formErrors.paciente_id
+																		? "border-red-500"
+																		: "border-gray-300"
+																} px-4 py-3 text-base select-custom`}
+															>
+																<option value=''>Selecione o paciente</option>
+																{pacientes.map((p) => (
+																	<option key={p.id} value={p.id}>
+																		{p.nome_completo}
+																	</option>
+																))}
+															</Select>
+															{formErrors.paciente_id && (
+																<p className='mt-1 text-sm text-red-600'>
+																	{formErrors.paciente_id}
+																</p>
+															)}
+														</div>
+														<div className='w-full'>
+															<label className='block text-sm font-medium text-gray-700 mb-1'>
+																Aluno
+															</label>
+															<Select
+																value={newEvent.fisioterapeuta_id ?? ""}
+																onChange={(e) => {
+																	const value = Number(e.target.value);
+																	setNewEvent({
+																		...newEvent,
+																		fisioterapeuta_id: value,
+																	});
+																	setFormErrors({
+																		...formErrors,
+																		fisioterapeuta_id: validateField(
+																			"fisioterapeuta_id",
+																			value,
+																		),
+																	});
+																}}
+																required
+																className={`w-full rounded-md border ${
+																	formErrors.fisioterapeuta_id
+																		? "border-red-500"
+																		: "border-gray-300"
+																} px-4 py-3 text-base select-custom`}
+															>
+																<option value=''>Selecione o Aluno</option>
+																{fisioterapeutas.map((f) => (
+																	<option key={f.id} value={f.id}>
+																		{f.nome_completo}
+																	</option>
+																))}
+															</Select>
+															{formErrors.fisioterapeuta_id && (
+																<p className='mt-1 text-sm text-red-600'>
+																	{formErrors.fisioterapeuta_id}
+																</p>
+															)}
+														</div>
+														<div className='w-full'>
+															<label className='block text-sm font-medium text-gray-700 mb-1'>
+																Horário
+															</label>
+															<Select
+																value={newEvent.horario_id ?? ""}
+																onChange={(e) => {
+																	const value = Number(e.target.value);
+																	setNewEvent({
+																		...newEvent,
+																		horario_id: value,
+																	});
+																	setFormErrors({
+																		...formErrors,
+																		horario_id: validateField(
+																			"horario_id",
+																			value,
+																		),
+																	});
+																}}
+																required
+																className={`w-full rounded-md border ${
+																	formErrors.horario_id
+																		? "border-red-500"
+																		: "border-gray-300"
+																} px-4 py-3 text-base select-custom`}
+															>
+																<option value=''>Selecione o horário</option>
+																{horarios.map((h) => (
+																	<option key={h.id} value={h.id}>
+																		{h.horario}
+																	</option>
+																))}
+															</Select>
+															{formErrors.horario_id && (
+																<p className='mt-1 text-sm text-red-600'>
+																	{formErrors.horario_id}
+																</p>
+															)}
+														</div>
+													</div>
 
-                          <div className="mt-5 flex justify-center space-x-4">
-                            <button
-                              type="button"
-                              className="inline-flex justify-center rounded-md bg-gray-300 px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-400"
-                              onClick={() => setShowModal(false)}
-                            >
-                              Voltar
-                            </button>
-                            <button
-                              type="submit"
-                              className="inline-flex justify-center rounded-md bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
-                            >
-                              Criar
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </Dialog.Panel>
-                </Transition.Child>
-              </div>
-            </div>
-          </Dialog>
-        </Transition.Root>
-      </main>
-    </>
-  );
+													<div className='mt-5 flex justify-center space-x-4'>
+														<button
+															type='button'
+															className='inline-flex justify-center rounded-md bg-gray-300 px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-400'
+															onClick={() => setShowModal(false)}
+														>
+															Voltar
+														</button>
+														<button
+															type='submit'
+															className='inline-flex justify-center rounded-md bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500'
+														>
+															Criar
+														</button>
+													</div>
+												</form>
+											</div>
+										</div>
+									</Dialog.Panel>
+								</Transition.Child>
+							</div>
+						</div>
+					</Dialog>
+				</Transition.Root>
+			</main>
+		</>
+	);
 }

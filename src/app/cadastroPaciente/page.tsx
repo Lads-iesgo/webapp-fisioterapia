@@ -199,7 +199,7 @@ export default function CadastrarPaciente() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
-      <div className="ml-72">
+      <div className="w-full md:pl-72 transition-all duration-300">
         {" "}
         <TopBar title="Cadastrar Paciente" />
         <main className="pt-24 px-4 md:px-8 mt-14 pb-8">
