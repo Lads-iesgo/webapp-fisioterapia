@@ -8,15 +8,10 @@ import NavBar from "../components/navBar"; // Importa de src/app/components/navB
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
 import api from "../services/api";
+import { Fisioterapeuta } from "../interfaces/types";
 
 //Criação de interfaces para os Pacientes
 interface Paciente {
-  id: number;
-  nome_completo: string;
-}
-
-//Criação de interfaces para os Fisioterapeutas
-interface Fisioterapeuta {
   id: number;
   nome_completo: string;
 }
@@ -47,7 +42,7 @@ export default function PaginaCadastrarConsulta() {
   useEffect(() => {
     api.get<Paciente[]>("/paciente").then((res) => setPacientes(res.data));
     api
-      .get<Fisioterapeuta[]>("/usuario/fisioterapeutas")
+      .get<Fisioterapeuta[]>("/usuario")
       .then((res) => setFisioterapeutas(res.data));
     api.get<Horario[]>("/horario").then((res) => setHorarios(res.data));
   }, []);

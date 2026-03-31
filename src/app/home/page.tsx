@@ -78,7 +78,7 @@ export default function Home() {
         console.error("Ops! Ocorreu um erro: " + err);
         showNotification(
           "error",
-          "Não foi possível carregar as consultas. Tente novamente mais tarde."
+          "Não foi possível carregar as consultas. Tente novamente mais tarde.",
         );
       });
   }, [showNotification]);
@@ -99,7 +99,7 @@ export default function Home() {
         console.error("Erro ao carregar dados:", error);
         showNotification(
           "error",
-          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas."
+          "Erro ao carregar alguns dados. Algumas informações podem estar incompletas.",
         );
       });
   }, [showNotification]);
@@ -109,7 +109,7 @@ export default function Home() {
     const eventos: EventInput[] = consulta.map((item) => {
       const paciente = pacientes.find((p) => p.id === item.paciente_id);
       const fisioterapeuta = fisioterapeutas.find(
-        (f) => f.id === item.fisioterapeuta_id
+        (f) => f.id === item.fisioterapeuta_id,
       );
       const horario = horarios.find((h) => h.id === item.horario_id);
 
@@ -137,12 +137,12 @@ export default function Home() {
       //Informações formatadas para exibição
       const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
       const fisioterapeutaNome =
-        fisioterapeuta?.nome_completo ?? "Usuário não informado";
+        fisioterapeuta?.nome_completo ?? "Aluno não informado";
 
       //Retorna o objeto de evento formatado
       return {
         id: String(item.id), //Convertendo para string para evitar erro de tipagem
-        title: `Paciente: ${pacienteNome} | Usuário: ${fisioterapeutaNome}`,
+        title: `Paciente: ${pacienteNome} | Aluno: ${fisioterapeutaNome}`,
         start: dataHoraISO,
         startStr: horario?.horario ? `${horario.horario}` : "",
         extendedProps: {
@@ -204,7 +204,7 @@ export default function Home() {
             <p><strong>Paciente:</strong> ${
               info.event.extendedProps.pacienteNome || "Não informado"
             }</p>
-            <p><strong>Usuário:</strong> ${
+            <p><strong>Aluno:</strong> ${
               info.event.extendedProps.fisioterapeutaNome ||
               "Não informado"
             }</p>
