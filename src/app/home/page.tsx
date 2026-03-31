@@ -168,7 +168,7 @@ export default function Home() {
       {/* Criação do componente calendário */}
       <main className="flex flex-col min-h-screen justify-center items-center p-0">
         <div className="flex justify-center items-center w-full">
-          <div className="ml-[288px] mt-20 w-[calc(90vw-320px)] min-h-[600px] cursor-default">
+          <div className="w-full px-2 mt-20 md:ml-[288px] md:w-[calc(85vw-320px)] md:px-0 cursor-default">
             <FullCalendar
               //Opções do calendário
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -195,82 +195,92 @@ export default function Home() {
                 daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
               }}
               //Configuração do tooltip
-              eventDidMount={(info) => {
-                //Cria um elemento tooltip personalizado
-                const tooltip = document.createElement("div");
-                tooltip.className = "fc-event-tooltip";
-                tooltip.innerHTML = `
-                  <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
-                    <p><strong>Paciente:</strong> ${
-                      info.event.extendedProps.pacienteNome || "Não informado"
-                    }</p>
-                    <p><strong>Aluno:</strong> ${
-                      info.event.extendedProps.fisioterapeutaNome ||
-                      "Não informado"
-                    }</p>
-                    <p><strong>Horário:</strong> ${
-                      info.event.extendedProps.horario || "Não informado"
-                    }</p>
-                  </div>
-                `;
-                tooltip.style.position = "absolute";
-                tooltip.style.zIndex = "10000";
-                tooltip.style.display = "none";
+            eventDidMount={(info) => {
+        // Cria um elemento tooltip personalizado
+        const tooltip = document.createElement("div");
+        tooltip.className = "fc-event-tooltip";
+        tooltip.innerHTML = `
+          <div class="bg-white border border-gray-200 rounded p-2 shadow-lg text-sm">
+            <p><strong>Paciente:</strong> ${
+              info.event.extendedProps.pacienteNome || "Não informado"
+            }</p>
+            <p><strong>Aluno:</strong> ${
+              info.event.extendedProps.fisioterapeutaNome ||
+              "Não informado"
+            }</p>
+            <p><strong>Horário:</strong> ${
+              info.event.extendedProps.horario || "Não informado"
+            }</p>
+          </div>
+        `;
+        tooltip.style.position = "absolute";
+        tooltip.style.zIndex = "10000";
+        tooltip.style.display = "none";
 
-                document.body.appendChild(tooltip);
+        document.body.appendChild(tooltip);
 
-                //Mostra o tooltip no hover com verificação de posição
-                info.el.addEventListener("mouseenter", () => {
-                  const rect = info.el.getBoundingClientRect();
+        // Mostra o tooltip no hover com verificação de posição
+        info.el.addEventListener("mouseenter", () => {
+          const rect = info.el.getBoundingClientRect();
 
-                  //Define tooltip como visível mas fora da tela para poder calcular dimensões
-                  tooltip.style.display = "block";
-                  tooltip.style.left = "-9999px";
-                  tooltip.style.top = "-9999px";
+          // Define tooltip como visível mas fora da tela para poder calcular dimensões
+          tooltip.style.display = "block";
+          tooltip.style.left = "-9999px";
+          tooltip.style.top = "-9999px";
 
-                  //Obtém as dimensões do tooltip
-                  const tooltipRect = tooltip.getBoundingClientRect();
-                  const tooltipWidth = tooltipRect.width;
-                  const tooltipHeight = tooltipRect.height;
+          // Obtém as dimensões do tooltip
+          const tooltipRect = tooltip.getBoundingClientRect();
+          const tooltipWidth = tooltipRect.width;
+          const tooltipHeight = tooltipRect.height;
 
-                  //Verifica espaço à direita
-                  const spaceRight = window.innerWidth - rect.right;
-                  //Verifica espaço abaixo
-                  const spaceBottom = window.innerHeight - rect.top;
+          // Verifica se é mobile (telas com largura até 768px)
+          const isMobile = window.innerWidth <= 768;
 
-                  //Posicionamento horizontal
-                  if (spaceRight >= tooltipWidth + 10) {
-                    //Suficiente espaço à direita
-                    tooltip.style.left = rect.right + 10 + "px";
-                  } else {
-                    //Não há espaço à direita, posicionar à esquerda
-                    tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
-                  }
+          if (isMobile) {
+            // === LÓGICA PARA MOBILE (Coloca embaixo) ===
+            tooltip.style.top = rect.bottom + 5 + "px"; // 5px de espaço abaixo do quadradinho
+            
+            // Tenta centralizar, mas garante que não vai vazar nem para a esquerda nem para a direita da tela
+            let leftPos = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+            leftPos = Math.max(10, Math.min(leftPos, window.innerWidth - tooltipWidth - 10));
+            tooltip.style.left = leftPos + "px";
 
-                  //Posicionamento vertical
-                  if (spaceBottom >= tooltipHeight + 10) {
-                    //Suficiente espaço abaixo
-                    tooltip.style.top = rect.top + "px";
-                  } else {
-                    //Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
-                    const topPosition = Math.max(
-                      10,
-                      rect.bottom - tooltipHeight,
-                    );
-                    tooltip.style.top = topPosition + "px";
-                  }
-                });
+          } else {
+            const spaceRight = window.innerWidth - rect.right;
+            const spaceBottom = window.innerHeight - rect.top;
 
-                //Esconde o tooltip quando o mouse sai
-                info.el.addEventListener("mouseleave", () => {
-                  tooltip.style.display = "none";
-                });
+            // Posicionamento horizontal
+            if (spaceRight >= tooltipWidth + 10) {
+              tooltip.style.left = rect.right + 10 + "px";
+            } else {
+              tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
+            }
 
-                //Remove o tooltip quando o evento é desmontado
-                return () => {
-                  document.body.removeChild(tooltip);
-                };
-              }}
+            // Posicionamento vertical
+            if (spaceBottom >= tooltipHeight + 10) {
+              tooltip.style.top = rect.top + "px";
+            } else {
+              const topPosition = Math.max(
+                10,
+                rect.bottom - tooltipHeight
+              );
+              tooltip.style.top = topPosition + "px";
+            }
+          }
+        });
+
+        // Esconde o tooltip quando o mouse sai
+        info.el.addEventListener("mouseleave", () => {
+          tooltip.style.display = "none";
+        });
+
+        // Remove o tooltip quando o evento é desmontado
+        return () => {
+          if (document.body.contains(tooltip)) {
+             document.body.removeChild(tooltip);
+          }
+        };
+      }}
               //Configuração de altura do calendário
               height={600}
               //Configuração de expansão de linhas
