@@ -18,15 +18,19 @@ interface Perfil {
 //Componente de cadastro de usuário
 export default function CadastroUsuario() {
   //Estado do formulário e outras variáveis
-  const [form, setForm] = useState({
-    nome_completo: "",
-    email: "",
-    senha: "",
-    telefone: "",
-    cpf: "",
-    semestre: "",
-    perfil_id: "",
-  });
+const [form, setForm] = useState({
+  nome_completo: "",
+  email: "",
+  senha: "",
+  telefone: "",
+  cpf: "",  // ADICIONADO CAMPO 
+  cep: "",   // ADICIONADO CAMPO 
+  rua: "",    // ADICIONADO CAMPO 
+  cidade: "",   // ADICIONADO CAMPO 
+  estado: "",   // ADICIONADO CAMPO 
+  semestre: "",
+  perfil_id: "",
+});
   const [loading, setLoading] = useState(false);
   const [loadingPerfis, setLoadingPerfis] = useState(true);
   const [perfis, setPerfis] = useState<Perfil[]>([]);
@@ -89,6 +93,35 @@ export default function CadastroUsuario() {
 
     return cpfFormatado;
   }
+// Função para validar cpf usando o algoritmo de validação oficial, garantondo que o cpf seja válido mesmo com a formatação aplicada no campo de entrada. evitando que CPF inválidos sejam aceitos mesmo que esetejam formatados corretamente. A função remove os caracteres não numéricos, verifica o comprimento e a repetição de dígitos, e calcula os dígitos verificadores para garantir a validade do CPF.
+  function validarCPF(cpf: string): boolean {
+    const cpfNumeros = cpf.replace(/\D/g, "");
+
+    if (cpfNumeros.length !== 11 || /^(\d)\1+$/.test(cpfNumeros)) {
+      return false;
+    }
+
+    let soma = 0;
+    let resto;
+
+    for (let i = 1; i <= 9; i++) {
+      soma += parseInt(cpfNumeros.substring(i - 1, i)) * (11 - i);
+    }
+
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpfNumeros.substring(9, 10))) return false;
+
+    soma = 0;
+    for (let i = 1; i <= 10; i++) {
+      soma += parseInt(cpfNumeros.substring(i - 1, i)) * (12 - i);
+    }
+
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+
+    return resto === parseInt(cpfNumeros.substring(10, 11));
+  }
 
   //Função para formatação automática de telefone enquanto digita
   function formatarTelefone(valor: string): string {
@@ -113,6 +146,42 @@ export default function CadastroUsuario() {
     return telefoneFormatado;
   }
 
+  function formatarCEP(valor: string): string {
+    const apenasNumeros = valor.replace(/\D/g, "");
+    const cepLimitado = apenasNumeros.slice(0, 8);
+
+    if (cepLimitado.length <= 5) return cepLimitado;
+
+    return `${cepLimitado.slice(0, 5)}-${cepLimitado.slice(5)}`;
+  }
+// Função para buscar endereço automaticamente com base no CEP usando a API viacep.com.br
+  async function buscarCEP(cep: string) {
+    const cepNumeros = cep.replace(/\D/g, "");
+
+    if (cepNumeros.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepNumeros}/json/`);
+      const data = (await response.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+
+      if (!data.erro) {
+        setForm((prev) => ({
+          ...prev,
+          rua: data.logradouro || "",
+          cidade: data.localidade || "",
+          estado: data.uf || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
+    }
+  }
+
   //Função para lidar com mudanças nos campos do formulário
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -123,6 +192,10 @@ export default function CadastroUsuario() {
       setForm({ ...form, [name]: formatarTelefone(value) });
     } else if (name === "cpf") {
       setForm({ ...form, [name]: formatarCPF(value) });
+    } else if (name === "cep") {
+      const cepFormatado = formatarCEP(value);
+      setForm({ ...form, [name]: cepFormatado });
+      buscarCEP(cepFormatado);
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -133,6 +206,26 @@ export default function CadastroUsuario() {
     e.preventDefault();
     setMensagem(null);
     setLoading(true);
+
+    const cpfValido = validarCPF(form.cpf);
+    if (!cpfValido) {
+      setMensagem({
+        tipo: "erro",
+        texto: "CPF inválido.",
+      });
+      setLoading(false);
+      return;
+    }
+    //Validação simples para garantir que o cep tenha 8 números, mesmo com a formatação
+    const cepNumeros = form.cep.replace(/\D/g, "");
+    if (cepNumeros.length !== 8) {
+      setMensagem({
+        tipo: "erro",
+        texto: "CEP deve conter 8 números.",
+      });
+      setLoading(false);
+      return;
+    }
 
     try {
       //Preparar dados para API conforme userController.ts
@@ -156,6 +249,10 @@ export default function CadastroUsuario() {
         senha: "",
         telefone: "",
         cpf: "",
+        cep: "",
+        rua: "",
+        cidade: "",
+        estado: "",
         semestre: "",
         perfil_id: perfis.length > 0 ? String(perfis[0].id) : "", //Reset para o primeiro perfil
       });
@@ -300,6 +397,66 @@ export default function CadastroUsuario() {
                     name="telefone"
                     value={form.telefone}
                     placeholder="(11) 98765-4321"
+                    onChange={handleChange}
+                    className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row gap-6 mb-6">
+                <div className="w-full md:w-1/4">
+                  <label className="block text-base font-medium mb-1">
+                    CEP
+                  </label>
+                  <input
+                    type="text"
+                    name="cep"
+                    value={form.cep}
+                    placeholder="12345-678"
+                    onChange={handleChange}
+                    className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                    required
+                  />
+                </div>
+                <div className="w-full md:w-3/4">
+                  <label className="block text-base font-medium mb-1">
+                    Rua
+                  </label>
+                  <input
+                    type="text"
+                    name="rua"
+                    value={form.rua}
+                    placeholder="Rua automática"
+                    onChange={handleChange}
+                    className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row gap-6 mb-6">
+                <div className="w-full md:w-1/2">
+                  <label className="block text-base font-medium mb-1">
+                    Cidade
+                  </label>
+                  <input
+                    type="text"
+                    name="cidade"
+                    value={form.cidade}
+                    placeholder="Cidade automática"
+                    onChange={handleChange}
+                    className="border border-gray-300 rounded px-3 py-2 w-full text-black"
+                    required
+                  />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <label className="block text-base font-medium mb-1">
+                    Estado
+                  </label>
+                  <input
+                    type="text"
+                    name="estado"
+                    value={form.estado}
+                    placeholder="Estado automático"
                     onChange={handleChange}
                     className="border border-gray-300 rounded px-3 py-2 w-full text-black"
                     required
