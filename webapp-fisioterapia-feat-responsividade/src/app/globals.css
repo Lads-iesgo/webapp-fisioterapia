@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+:root {
+  @apply bg-gray-50;
+}
+
+input {
+  @apply px-2;
+}
+
+.fc-header-toolbar {
+  @apply w-full flex flex-col sm:flex-row justify-between items-center px-4 sm:px-6 py-3 gap-3 sm:gap-0;
+}
+
+.fc-toolbar-title {
+  @apply text-xl sm:text-2xl md:text-3xl;
+}
+
+.fc-button {
+  @apply text-base sm:text-lg px-3 sm:px-5 py-2 sm:py-3;
+}
+
+.fc-day {
+  @apply p-2 sm:p-3;
+}
+
+.fc-scrollgrid-sync-table {
+  @apply w-full;
+}
+
+.fc-view {
+  @apply w-full h-full bg-white;
+}
+
+.fc {
+  @apply w-full h-full;
+}
+
+.fc-scrollgrid {
+  @apply w-full h-full;
+}
+
+.fc-scrollgrid-section-body {
+  @apply w-full h-full;
+}
+
+.fc-timegrid-slot {
+  @apply h-10 sm:h-12 md:h-14;
+}
+
+.fc-timegrid-slot-label {
+  @apply text-sm sm:text-base;
+}
+
+.fc-timegrid-axis {
+  @apply w-14 sm:w-16 md:w-20;
+}
+
+.fc-timegrid-slot-minor {
+  @apply border-0;
+}
+
+.fc-timegrid-slot-major {
+  @apply border-b border-gray-200;
+}
+
+.fc-timegrid-axis-cushion {
+  @apply text-sm sm:text-base font-medium;
+}
+
+.fc-timegrid-slot-label-frame {
+  @apply text-center;
+}
+
+.fc-h-event {
+  @apply bg-blue-500 border border-blue-600 text-sm sm:text-base p-2;
+}
+
+.fc-event-title {
+  @apply font-medium text-base;
+}
+
+.fc-event-time {
+  @apply font-bold text-sm;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  @apply bg-blue-100;
+}
+
+.fc .fc-button {
+  @apply bg-blue-800 hover:bg-blue-900;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  @apply bg-blue-600;
+}
+
+.fc .fc-button-primary:disabled {
+  @apply bg-blue-600;
+}
+
+.fc-v-event {
+  @apply bg-blue-500 border border-blue-600 text-xs sm:text-sm;
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 640px) {
+  .fc-header-toolbar {
+    @apply flex-col px-2;
+  }
+  
+  .fc-toolbar-chunk {
+    @apply w-full flex justify-center;
+  }
+  
+  .fc-timegrid-axis {
+    @apply w-12;
+  }
+  
+  .fc-timegrid-slot {
+    @apply h-8;
+  }
+}
+
+/* Ajustes para telas médias */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .fc-timegrid-axis {
+    @apply w-16;
+  }
+  
+  .fc-timegrid-slot {
+    @apply h-12;
+  }
+}
+
+/* Ajustes para telas grandes */
+@media (min-width: 1024px) {
+  .fc-timegrid-axis {
+    @apply w-20;
+  }
+  
+  .fc-timegrid-slot {
+    @apply h-14;
+  }
+}
+
+html, body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.fc-scroller {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.fc-scroller-liquid-absolute {
+  position: absolute !important;
+}
+
+.fc-scrollgrid-section-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.fc-scrollgrid-section {
+  overflow: visible !important;
+}
+
+.fc-scrollgrid {
+  overflow: visible !important;
+}
+
+.fc-view-harness {
+  overflow: visible !important;
+}
+
+.fc-timegrid-body {
+  overflow: visible !important;
+}
+
+.fc-timegrid-slot-lane {
+  overflow: visible !important;
+}
+
+/* Adicione ao final do arquivo */
+.fc-event-tooltip {
+  pointer-events: none;
+  max-width: 300px;
+}
+
+.fc-event {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.fc-event:hover {
+  transform: scale(1.02);
+  z-index: 100;
+}
+
+.select-custom {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 3rem !important;
+}
