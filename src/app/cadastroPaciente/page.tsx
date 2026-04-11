@@ -7,7 +7,14 @@ import { AxiosError } from "axios";
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
 import Button from "../components/button";
+import RouteGuard from "../components/RouteGuard";
 import api from "../services/api";
+import {
+  isValidCPF,
+  isValidTelefone,
+  isValidCEP,
+  isValidDataNascimento,
+} from "../lib/validations";
 
 export default function CadastrarPaciente() {
   //Estado para armazenar os dados do formulário
@@ -145,9 +152,46 @@ export default function CadastrarPaciente() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMensagem(null);
+
+    // Validação de CPF
+    if (!isValidCPF(form.cpf)) {
+      setMensagem({
+        tipo: "erro",
+        texto: "CPF inválido. Verifique os dígitos e tente novamente.",
+      });
+      return;
+    }
+
+    // Validação de Telefone
+    if (!isValidTelefone(form.telefone)) {
+      setMensagem({
+        tipo: "erro",
+        texto: "Telefone inválido. Informe um número válido com DDD.",
+      });
+      return;
+    }
+
+    // Validação de Data de Nascimento
+    if (!isValidDataNascimento(form.data_nascimento)) {
+      setMensagem({
+        tipo: "erro",
+        texto:
+          "Data de nascimento inválida. Use o formato DD/MM/AAAA.",
+      });
+      return;
+    }
+
+    // Validação de CEP
+    if (!isValidCEP(form.cep)) {
+      setMensagem({
+        tipo: "erro",
+        texto: "CEP inválido. Informe um CEP com 8 dígitos.",
+      });
+      return;
+    }
+
     setLoading(true);
 
-    //Validação simples para verificar se o CPF já está preenchido
     try {
       const dadosPaciente = {
         nome_completo: `${form.nome} ${form.sobrenome}`,
@@ -197,6 +241,7 @@ export default function CadastrarPaciente() {
   }
 
   return (
+    <RouteGuard>
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
       <div className="w-full md:pl-72 transition-all duration-300">
@@ -412,5 +457,6 @@ export default function CadastrarPaciente() {
         </main>
       </div>
     </div>
+    </RouteGuard>
   );
 }

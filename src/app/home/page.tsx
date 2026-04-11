@@ -14,6 +14,7 @@ import { useNotification } from "../components/Notification";
 
 import NavBar from "../components/navBar";
 import TopBar from "../components/topBar";
+import RouteGuard from "../components/RouteGuard";
 
 //Importação das tipagens necessárias
 import {
@@ -184,7 +185,7 @@ export default function Home() {
 
   //Renderiza o componente principal
   return (
-    <>
+    <RouteGuard>
       <NavBar />
       <TopBar title={nomeUsuario ? `Bem-vindo, ${nomeUsuario}` : "Home"} />
 
@@ -329,6 +330,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </>
+    </RouteGuard>
   );
 }

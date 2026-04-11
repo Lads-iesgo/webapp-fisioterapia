@@ -8,6 +8,8 @@ import Link from "next/link";
 import Button from "../components/button";
 import api from "../services/api";
 import { useNotification } from "../components/Notification";
+import { useAuth } from "../components/AuthContext";
+import { getUserGroup, getDefaultRoute } from "../lib/permissions";
 
 import logo from "../../../public/logo-iesgo.png";
 
@@ -15,6 +17,7 @@ export default function Login() {
   const router = useRouter();
   const { showNotification } = useNotification();
   const cookies = useCookies(); // Usar hook em vez de factory function
+  const { refreshUser } = useAuth();
 
   const [credentials, setCredentials] = useState({
     email: "",
@@ -53,11 +56,17 @@ export default function Login() {
         );
       }
 
-      // Armazenar flag indicando login bem-sucedido para a Home mostrar notificação
+      // Armazenar flag indicando login bem-sucedido para mostrar notificação
       sessionStorage.setItem("loginSuccess", "true");
 
-      // Redireciona para a página home sem mostrar notificação aqui
-      router.push("/home");
+      // Atualiza o AuthContext para refletir o usuário recém-logado
+      refreshUser();
+
+      // Redireciona conforme o grupo do perfil (GROUP_1 → /home, GROUP_2 → /disponibilidade)
+      const perfil = String(response.data.user?.perfil || "").toLowerCase();
+      const group = getUserGroup(perfil);
+      const destino = getDefaultRoute(group);
+      router.push(destino);
     } catch (error: unknown) {
       // Continua mostrando notificação de erro aqui
       let errorMessage =

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NotificationProvider } from "./components/Notification";
 import { CookiesProvider } from "next-client-cookies/server"; // Corrigir importação
+import { AuthProvider } from "./components/AuthContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +32,9 @@ export default function RootLayout({
       >
         <CookiesProvider>
           <NotificationProvider>
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </NotificationProvider>
         </CookiesProvider>
       </body>

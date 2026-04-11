@@ -7,6 +7,7 @@ import { AxiosError } from "axios";
 import NavBar from "../components/navBar"; // Importa de src/app/components/navBar.tsx
 import TopBar from "../components/topBar"; // Importa de src/app/components/topBar.tsx
 import Button from "../components/button"; // Importa de src/app/components/button.tsx
+import RouteGuard from "../components/RouteGuard";
 import api from "../services/api";
 import { Fisioterapeuta } from "../interfaces/types";
 
@@ -122,6 +123,7 @@ export default function PaginaCadastrarConsulta() {
   }
 
   return (
+    <RouteGuard>
     <div className="bg-white h-screen flex flex-row overflow-hidden  w-full md:pl-72 transition-all duration-300">
       <NavBar />
       <div className="flex flex-col flex-1">
@@ -233,5 +235,6 @@ export default function PaginaCadastrarConsulta() {
         </main>
       </div>
     </div>
+    </RouteGuard>
   );
 }

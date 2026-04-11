@@ -6,6 +6,17 @@ import { TitleProps } from "../interfaces/types";
 import { useRouter } from "next/navigation";
 import { useCookies } from "next-client-cookies";
 import { useNotification } from "./Notification";
+import { useAuth } from "./AuthContext";
+
+// Itens do menu mobile com restrição por grupo
+const MOBILE_MENU_ITEMS = [
+  { href: "/home", label: "Home", groups: ["GROUP_1"] as const },
+  { href: "/disponibilidade", label: "Disponibilidade", groups: ["GROUP_2"] as const },
+  { href: "/cadastroPaciente", label: "Cadastro de Paciente", groups: ["GROUP_2"] as const },
+  { href: "/cadastroUsuario", label: "Cadastro de Usuário", groups: ["GROUP_2"] as const },
+  { href: "/cadastroConsulta", label: "Cadastro de Consulta", groups: ["GROUP_2"] as const },
+];
+
 export default function TopBar(props: TitleProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -14,10 +25,17 @@ export default function TopBar(props: TitleProps) {
    const router = useRouter();
     const cookies = useCookies();
     const { showNotification } = useNotification();
+    const { userGroup, logout } = useAuth();
+
+    // Filtra os itens visíveis conforme o grupo do usuário
+    const visibleItems = MOBILE_MENU_ITEMS.filter((item) =>
+      userGroup ? item.groups.includes(userGroup as never) : false
+    );
 
     // Função para fazer logout
   const handleLogout = () => {
-    // Remover o token do cookie
+    // Limpa estado do contexto, localStorage e cookie
+    logout();
     cookies.remove("token");
 
     // Mostrar notificação de sucesso
@@ -68,21 +86,16 @@ export default function TopBar(props: TitleProps) {
         }`}
       >
         <nav className="flex flex-col gap-8 text-center">
-          <Link href="/home" onClick={toggleMenu} className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors">
-            Home
-          </Link>
-          <Link href="/disponibilidade" onClick={toggleMenu} className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors">
-            Disponibilidade
-          </Link>
-          <Link href="/cadastroPaciente" onClick={toggleMenu} className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors">
-            Cadastro de Paciente
-          </Link>
-          <Link href="/cadastroUsuario" onClick={toggleMenu} className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors">
-            Cadastro de Usuário
-          </Link>
-          <Link href="/cadastroConsulta" onClick={toggleMenu} className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors">
-            Cadastro de Consulta
-          </Link>
+          {visibleItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={toggleMenu}
+              className="text-white text-2xl font-semibold hover:text-blue-300 transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
            {/* Botão de logout no final da barra */}
         <div className="w-full px-4 py-6 border-t border-blue-800 flex justify-center">
           <button
