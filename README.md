@@ -1,6 +1,6 @@
 # WebApp de Fisioterapia
 
-Este projeto é um aplicativo web desenvolvido com **Next.js** e **TypeScript**, destinado a auxiliar o curso de fisioterapia com seus pacientes.
+Aplicação web do sistema de fisioterapia, construída com Next.js e TypeScript, com autenticação, proteção de rotas por perfil e módulos para agenda e cadastros.
 
 ## Repositório Git
 
@@ -8,16 +8,28 @@ O código-fonte deste projeto está hospedado no GitHub: [https://github.com/Lad
 
 ## Tecnologias Utilizadas
 
-- **Next.js:** Framework React para desenvolvimento de aplicações web modernas.
-- **TypeScript:** Superset de JavaScript que adiciona tipagem estática.
-- **Node.js:** Ambiente de tempo de execução JavaScript.
-- **npm (ou Yarn):** Gerenciador de pacotes JavaScript.
-- **Git:** Sistema de controle de versão distribuído.
+- **Next.js 16**: framework principal da aplicação.
+- **React 19** e **React DOM 19**: interface e renderização.
+- **TypeScript 5**: tipagem estática.
+- **Tailwind CSS 4** + **PostCSS** + **Autoprefixer**: estilização.
+- **Axios**: comunicação HTTP com a API.
+- **FullCalendar**: calendário de consultas e disponibilidade.
+- **Headless UI** e **Heroicons**: componentes e ícones de interface.
+- **next-client-cookies**: suporte a cookies no app router.
+- **ESLint 9** + **eslint-config-next**: padronização de código.
 
 ## Pré-requisitos
 
-- **Node.js:** Certifique-se de ter o Node.js instalado em sua máquina. Você pode baixá-lo em [https://nodejs.org/](https://nodejs.org/).
-- **Git:** Certifique-se de ter o Git instalado em sua máquina. Você pode baixá-lo em [https://git-scm.com/](https://git-scm.com/).
+- **Node.js 20+** (recomendado)
+- **npm 10+**
+- **Git**
+
+## Scripts Disponíveis
+
+- `npm run dev`: inicia a aplicação em modo desenvolvimento.
+- `npm run build`: gera build de produção.
+- `npm run start`: sobe a aplicação em modo produção.
+- `npm run lint`: executa análise estática com ESLint.
 
 ## Configuração do Projeto
 
@@ -46,14 +58,26 @@ O código-fonte deste projeto está hospedado no GitHub: [https://github.com/Lad
 
 ```
 📦 webapp-fisioterapia
-┣ 📂 public/           # Arquivos estáticos (imagens, fontes, etc.)
-┣ 📂 app/              # Estrutura principal do Next.js
-┃ ┣ 📂 components/     # Componentes reutilizáveis
-┃ ┣ 📂 styles/         # Estilos globais
-┃ ┗ 📜 page.tsx        # Página principal do aplicativo
-┣ 📜 package.json      # Dependências do projeto
-┣ 📜 tsconfig.json     # Configuração do TypeScript
-┗ 📜 README.md         # Documentação do projeto
+┣ 📂 public/
+┣ 📂 src/
+┃ ┣ 📜 proxy.ts                        # Proteção de rotas no nível do Next
+┃ ┗ 📂 app/
+┃   ┣ 📂 components/                   # Contextos, guardas e componentes base
+┃   ┣ 📂 services/                     # Camada de API
+┃   ┣ 📂 interfaces/                   # Tipagens compartilhadas
+┃   ┣ 📂 lib/                          # Permissões e utilitários
+┃   ┣ 📂 login/                        # Tela de autenticação
+┃   ┣ 📂 home/                         # Visão principal para perfis de leitura
+┃   ┣ 📂 disponibilidade/              # Agenda e gestão de disponibilidade
+┃   ┣ 📂 cadastroPaciente/
+┃   ┣ 📂 cadastroUsuario/
+┃   ┣ 📂 cadastroConsulta/
+┃   ┣ 📜 layout.tsx
+┃   ┣ 📜 page.tsx
+┃   ┗ 📜 globals.css
+┣ 📜 package.json
+┣ 📜 tsconfig.json
+┗ 📜 README.md
 ```
 
 ## Branches
@@ -94,7 +118,6 @@ Para contribuir com o projeto, siga estes passos:
 Um Pull Request (PR) é uma solicitação para mesclar suas alterações da sua branch para a branch `develop`. Isso permite que outros colaboradores revisem seu código e garantam que ele se encaixe no projeto. Siga estes passos para criar um PR:
 
 1. **Verifique suas alterações:**
-
    - Certifique-se de que suas alterações estejam completas e funcionando corretamente.
    - Use `git status` para verificar as alterações pendentes e `git diff` para revisar as modificações.
 
@@ -105,7 +128,6 @@ Um Pull Request (PR) é uma solicitação para mesclar suas alterações da sua 
    ```
 
 3. **Crie o Pull Request no GitHub:**
-
    - Acesse o repositório do projeto no GitHub.
    - Clique na aba "Pull requests".
    - Clique no botão "New pull request".
@@ -114,10 +136,17 @@ Um Pull Request (PR) é uma solicitação para mesclar suas alterações da sua 
    - Clique no botão "Create pull request".
 
 4. **Acompanhe a revisão:**
-
    - Aguarde a revisão do seu PR por outros colaboradores.
    - Responda aos comentários e faça as alterações necessárias.
    - Após a aprovação, o PR poderá ser mesclado na branch `develop`.
+
+## Ambiente e Integração
+
+- O frontend depende da API backend para autenticação e dados de agenda/cadastros.
+- A proteção de rotas é feita em duas camadas:
+  - via proxy (token em cookie);
+  - via guarda de rota por perfil no cliente.
+- Garanta que o backend esteja ativo para validar os fluxos principais do sistema.
 
 ## Dicas adicionais
 
@@ -127,4 +156,4 @@ Um Pull Request (PR) é uma solicitação para mesclar suas alterações da sua 
 
 ## Contato
 
-- [lads@iesgo.edu.br](mailto:lads@iesgo.edu.br)
+lads@iesgo.edu.br
