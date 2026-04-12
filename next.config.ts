@@ -5,10 +5,7 @@ const dynamicOrigins = (process.env.NEXT_DEV_ORIGINS || "")
 	.filter(Boolean);
 
 const nextConfig = {
-	allowedDevOrigins: [
-		"*",
-		...dynamicOrigins,
-	],
+	allowedDevOrigins: ["*", ...dynamicOrigins],
 };
 
 module.exports = nextConfig;

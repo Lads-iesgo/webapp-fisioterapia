@@ -63,7 +63,7 @@ export default function NavBar() {
 						width={120}
 						height={45}
 						alt='Logo IESGO'
-						className='mb-2'
+						className='mb-2 h-auto'
 					/>
 					<h2 className='text-white text-xl font-semibold tracking-wide'>
 						FISIOTERAPIA
