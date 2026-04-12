@@ -39,9 +39,12 @@ export default function Login() {
 
 			// Armazenar o token no cookies
 			cookies.set("token", response.data.token, {
-				expires: 1, // expira em 1 dias
-				secure: process.env.NODE_ENV === "production",
-				sameSite: "strict",
+				expires: 1,
+				path: "/",
+				sameSite: "lax",
+				secure:
+					typeof window !== "undefined" &&
+					window.location.protocol === "https:",
 			});
 
 			// Salvar informações do usuário no localStorage
@@ -94,7 +97,7 @@ export default function Login() {
 						height={60}
 						priority
 						alt='Logo Instituição IESGO'
-						className='mb-2'
+						className='mb-2 h-auto'
 					/>
 					<h2 className='text-white text-xl font-semibold tracking-wide'>
 						FISIOTERAPIA
