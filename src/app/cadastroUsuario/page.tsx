@@ -46,18 +46,23 @@ export default function CadastroUsuario() {
 				setLoadingPerfis(true);
 				const response = await api.get("/perfil");
 
+				// Remove "fisioterapeuta" da lista — domínio agora usa "aluno"
+				const semFisioterapeuta: Perfil[] = response.data.filter(
+					(p: Perfil) => p.nome.toLowerCase() !== "fisioterapeuta",
+				);
+
 				// Filtra perfis conforme a role do usuário logado
 				const roleAtual = String(user?.perfil || "").toLowerCase();
-				let perfisFiltrados: Perfil[] = response.data;
+				let perfisFiltrados = semFisioterapeuta;
 
 				if (roleAtual === "professor") {
 					// Professor só pode cadastrar Aluno
-					perfisFiltrados = response.data.filter(
+					perfisFiltrados = semFisioterapeuta.filter(
 						(p: Perfil) => p.nome.toLowerCase() === "aluno",
 					);
 				} else if (roleAtual === "coordenador") {
 					// Coordenador vê tudo exceto Admin
-					perfisFiltrados = response.data.filter(
+					perfisFiltrados = semFisioterapeuta.filter(
 						(p: Perfil) => p.nome.toLowerCase() !== "admin",
 					);
 				}
@@ -134,6 +139,10 @@ export default function CadastroUsuario() {
 		return telefoneFormatado;
 	}
 
+	// Verifica se o perfil selecionado é "Aluno"
+	const perfilSelecionado = perfis.find((p) => String(p.id) === form.perfil_id);
+	const isPerfilAluno = perfilSelecionado?.nome.toLowerCase() === "aluno";
+
 	//Função para lidar com mudanças nos campos do formulário
 	function handleChange(
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -144,6 +153,15 @@ export default function CadastroUsuario() {
 			setForm({ ...form, [name]: formatarTelefone(value) });
 		} else if (name === "cpf") {
 			setForm({ ...form, [name]: formatarCPF(value) });
+		} else if (name === "perfil_id") {
+			// Limpa semestre ao trocar para um perfil que não seja Aluno
+			const novoPerfil = perfis.find((p) => String(p.id) === value);
+			const novoIsAluno = novoPerfil?.nome.toLowerCase() === "aluno";
+			setForm({
+				...form,
+				perfil_id: value,
+				semestre: novoIsAluno ? form.semestre : "",
+			});
 		} else {
 			setForm({ ...form, [name]: value });
 		}
@@ -153,6 +171,15 @@ export default function CadastroUsuario() {
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setMensagem(null);
+
+		// Validação de Semestre obrigatório para Aluno
+		if (isPerfilAluno && !form.semestre) {
+			setMensagem({
+				tipo: "erro",
+				texto: "O campo Semestre é obrigatório para o perfil Aluno.",
+			});
+			return;
+		}
 
 		// Validação de CPF
 		if (!isValidCPF(form.cpf)) {
@@ -294,31 +321,7 @@ export default function CadastroUsuario() {
 									</div>
 								</div>
 								<div className='flex flex-col md:flex-row gap-6 mb-6'>
-									<div className='w-full md:w-1/3'>
-										<label className='block text-base font-medium mb-1'>
-											Semestre
-										</label>
-										<select
-											name='semestre'
-											value={form.semestre}
-											onChange={handleChange}
-											className='border border-gray-300 rounded px-3 py-2 w-full text-black appearance-none'
-											required
-										>
-											<option value='' disabled>
-												Selecione o semestre
-											</option>
-											<option value='1º'>1º</option>
-											<option value='2º'>2º</option>
-											<option value='3º'>3º</option>
-											<option value='4º'>4º</option>
-											<option value='5º'>5º</option>
-											<option value='6º'>6º</option>
-											<option value='7º'>7º</option>
-											<option value='8º'>8º</option>
-										</select>
-									</div>
-									<div className='w-full md:w-1/3'>
+									<div className='w-full md:w-1/2'>
 										<label className='block text-base font-medium mb-1'>
 											CPF
 										</label>
@@ -332,7 +335,7 @@ export default function CadastroUsuario() {
 											required
 										/>
 									</div>
-									<div className='w-full md:w-1/3'>
+									<div className='w-full md:w-1/2'>
 										<label className='block text-base font-medium mb-1'>
 											Telefone
 										</label>
@@ -348,7 +351,7 @@ export default function CadastroUsuario() {
 									</div>
 								</div>
 								<div className='flex flex-col md:flex-row gap-6 mb-6'>
-									<div className='w-full'>
+									<div className={`w-full ${isPerfilAluno ? "md:w-1/2" : ""}`}>
 										<label className='block text-base font-medium mb-1'>
 											Perfil
 										</label>
@@ -375,6 +378,32 @@ export default function CadastroUsuario() {
 											</select>
 										)}
 									</div>
+									{isPerfilAluno && (
+										<div className='w-full md:w-1/2'>
+											<label className='block text-base font-medium mb-1'>
+												Semestre
+											</label>
+											<select
+												name='semestre'
+												value={form.semestre}
+												onChange={handleChange}
+												className='border border-gray-300 rounded px-3 py-2 w-full text-black appearance-none'
+												required
+											>
+												<option value='' disabled>
+													Selecione o semestre
+												</option>
+												<option value='1º'>1º</option>
+												<option value='2º'>2º</option>
+												<option value='3º'>3º</option>
+												<option value='4º'>4º</option>
+												<option value='5º'>5º</option>
+												<option value='6º'>6º</option>
+												<option value='7º'>7º</option>
+												<option value='8º'>8º</option>
+											</select>
+										</div>
+									)}
 								</div>
 								{mensagem && (
 									<div
