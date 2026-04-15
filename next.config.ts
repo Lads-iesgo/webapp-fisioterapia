@@ -6,6 +6,9 @@ const dynamicOrigins = (process.env.NEXT_DEV_ORIGINS || "")
 
 const nextConfig = {
 	allowedDevOrigins: ["*", ...dynamicOrigins],
+	turbopack: {
+		root: __dirname,
+	},
 };
 
 module.exports = nextConfig;

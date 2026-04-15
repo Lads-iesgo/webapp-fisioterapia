@@ -250,8 +250,11 @@ export default function Home() {
 
 								document.body.appendChild(tooltip);
 
-								// Mostra o tooltip no hover com verificação de posição
-								info.el.addEventListener("mouseenter", () => {
+								// Armazena referência no elemento para cleanup via eventWillUnmount
+								(info.el as HTMLElement & { _tooltip?: HTMLDivElement })._tooltip = tooltip;
+
+								// Handlers nomeados para remoção limpa
+								const handleMouseEnter = () => {
 									const rect = info.el.getBoundingClientRect();
 
 									// Define tooltip como visível mas fora da tela para poder calcular dimensões
@@ -268,10 +271,7 @@ export default function Home() {
 									const isMobile = window.innerWidth <= 768;
 
 									if (isMobile) {
-										// === LÓGICA PARA MOBILE (Coloca embaixo) ===
-										tooltip.style.top = rect.bottom + 5 + "px"; // 5px de espaço abaixo do quadradinho
-
-										// Tenta centralizar, mas garante que não vai vazar nem para a esquerda nem para a direita da tela
+										tooltip.style.top = rect.bottom + 5 + "px";
 										let leftPos = rect.left + rect.width / 2 - tooltipWidth / 2;
 										leftPos = Math.max(
 											10,
@@ -282,14 +282,12 @@ export default function Home() {
 										const spaceRight = window.innerWidth - rect.right;
 										const spaceBottom = window.innerHeight - rect.top;
 
-										// Posicionamento horizontal
 										if (spaceRight >= tooltipWidth + 10) {
 											tooltip.style.left = rect.right + 10 + "px";
 										} else {
 											tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
 										}
 
-										// Posicionamento vertical
 										if (spaceBottom >= tooltipHeight + 10) {
 											tooltip.style.top = rect.top + "px";
 										} else {
@@ -300,19 +298,34 @@ export default function Home() {
 											tooltip.style.top = topPosition + "px";
 										}
 									}
-								});
-
-								// Esconde o tooltip quando o mouse sai
-								info.el.addEventListener("mouseleave", () => {
-									tooltip.style.display = "none";
-								});
-
-								// Remove o tooltip quando o evento é desmontado
-								return () => {
-									if (document.body.contains(tooltip)) {
-										document.body.removeChild(tooltip);
-									}
 								};
+
+								const handleMouseLeave = () => {
+									tooltip.style.display = "none";
+								};
+
+								info.el.addEventListener("mouseenter", handleMouseEnter);
+								info.el.addEventListener("mouseleave", handleMouseLeave);
+
+								// Armazena handlers para remoção no unmount
+								(info.el as HTMLElement & { _tooltipHandlers?: { enter: () => void; leave: () => void } })._tooltipHandlers = {
+									enter: handleMouseEnter,
+									leave: handleMouseLeave,
+								};
+							}}
+							// Cleanup correto: remove tooltip do DOM e listeners do elemento
+							eventWillUnmount={(info) => {
+								const el = info.el as HTMLElement & {
+									_tooltip?: HTMLDivElement;
+									_tooltipHandlers?: { enter: () => void; leave: () => void };
+								};
+								if (el._tooltip && document.body.contains(el._tooltip)) {
+									document.body.removeChild(el._tooltip);
+								}
+								if (el._tooltipHandlers) {
+									el.removeEventListener("mouseenter", el._tooltipHandlers.enter);
+									el.removeEventListener("mouseleave", el._tooltipHandlers.leave);
+								}
 							}}
 							//Configuração de altura do calendário
 							height={600}

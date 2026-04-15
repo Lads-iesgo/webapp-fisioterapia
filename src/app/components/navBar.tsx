@@ -95,14 +95,16 @@ export default function NavBar() {
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
 							className='h-5 w-5 mr-3'
-							viewBox='0 0 20 20'
-							fill='currentColor'
+							viewBox='0 0 24 24'
+							fill='none'
+							stroke='currentColor'
+							strokeWidth='2'
+							strokeLinecap='round'
+							strokeLinejoin='round'
 						>
-							<path
-								fillRule='evenodd'
-								d='M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z'
-								clipRule='evenodd'
-							/>
+							<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
+							<polyline points='16 17 21 12 16 7' />
+							<line x1='21' y1='12' x2='9' y2='12' />
 						</svg>
 						<span className='text-lg font-medium'>Sair</span>
 					</button>

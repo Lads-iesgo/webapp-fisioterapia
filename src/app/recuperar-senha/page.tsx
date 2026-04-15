@@ -56,7 +56,7 @@ export default function RecuperarSenha() {
 						height={60}
 						priority
 						alt='Logo Instituição IESGO'
-						className='mb-2 h-auto'
+						className='mb-2 w-auto h-auto'
 					/>
 					<h2 className='text-white text-xl font-semibold tracking-wide'>
 						FISIOTERAPIA

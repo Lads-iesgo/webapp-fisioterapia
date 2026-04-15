@@ -84,6 +84,10 @@ export default function Disponibilidade() {
 		userPerfil === "admin" ||
 		userPerfil === "coordenador" ||
 		userPerfil === "professor";
+
+	// Apenas admin e coordenador podem gerenciar indisponibilidades
+	const temPermissaoIndisponibilidade =
+		userPerfil === "admin" || userPerfil === "coordenador";
 	//Função para exibir notificações
 	function showNotification(
 		type: "success" | "error" | "warning",
@@ -133,8 +137,6 @@ export default function Disponibilidade() {
 			return;
 		}
 
-		setActionModalMode("default");
-
 		// Limpa o estado completamente para uma nova consulta
 		// Usa o dateStr para garantir a string "YYYY-MM-DD" perfeitamente
 		setNewEvent({
@@ -145,6 +147,13 @@ export default function Disponibilidade() {
 			horario_id: undefined,
 		});
 
+		// Professor vai direto para o cadastro de consulta (sem opção de indisponibilidade)
+		if (!temPermissaoIndisponibilidade) {
+			setShowModal(true);
+			return;
+		}
+
+		setActionModalMode("default");
 		setShowActionModal(true);
 	}
 
@@ -169,6 +178,18 @@ export default function Disponibilidade() {
 			// Atualizamos o estado de indisponibilidades.
 			// O useEffect vai detectar isso e redesenhar o calendário sozinho.
 			setIndisponibilidades((prev) => [...prev, response.data]);
+
+			// Remove do estado local as consultas que foram excluídas pelo backend
+			setConsulta((prev) =>
+				prev.filter((c) => {
+					const dataConsulta =
+						typeof c.data_consulta === "string"
+							? c.data_consulta.split("T")[0]
+							: c.data_consulta.toISOString().split("T")[0];
+					return dataConsulta !== dataString;
+				}),
+			);
+
 			setShowActionModal(false);
 			showNotification("success", "Dia bloqueado com sucesso!");
 		} catch (error) {
@@ -420,12 +441,12 @@ export default function Disponibilidade() {
 			// Informações formatadas para exibição
 			const pacienteNome = paciente?.nome_completo ?? "Paciente não informado";
 			const fisioterapeutaNome =
-				fisioterapeuta?.nome_completo ?? "Fisioterapeuta não informado";
+				fisioterapeuta?.nome_completo ?? "Aluno não informado";
 
 			//Criação do evento
 			return {
 				id: String(item.id), // Convertendo para string para evitar erro de tipagem
-				title: `Paciente: ${pacienteNome} | Fisioterapeuta: ${fisioterapeutaNome}`,
+				title: `Paciente: ${pacienteNome} | Aluno: ${fisioterapeutaNome}`,
 				start: dataHoraISO,
 				startStr: horario?.horario ? `${horario.horario}` : "",
 				extendedProps: {
@@ -563,6 +584,9 @@ export default function Disponibilidade() {
 								if (window.innerWidth <= 768) {
 									return;
 								}
+								if (info.event.extendedProps.status === "indisponivel") {
+									return;
+								}
 								//Cria um elemento tooltip personalizado
 								const tooltip = document.createElement("div");
 								tooltip.className = "fc-event-tooltip";
@@ -572,7 +596,7 @@ export default function Disponibilidade() {
 											info.event.extendedProps.pacienteNome || "Não informado"
 										}</p>
                     <p><strong>Aluno:</strong> ${
-											info.event.extendedProps.alunoNome || "Não informado"
+											info.event.extendedProps.fisioterapeutaNome || "Não informado"
 										}</p>
                     <p><strong>Horário:</strong> ${
 											info.event.extendedProps.horario || "Não informado"
@@ -585,8 +609,11 @@ export default function Disponibilidade() {
 
 								document.body.appendChild(tooltip);
 
-								// Mostra o tooltip no hover com verificação de posição
-								info.el.addEventListener("mouseenter", () => {
+								// Armazena referência no elemento para cleanup via eventWillUnmount
+								(info.el as HTMLElement & { _tooltip?: HTMLDivElement })._tooltip = tooltip;
+
+								// Handlers nomeados para remoção limpa
+								const handleMouseEnter = () => {
 									const rect = info.el.getBoundingClientRect();
 
 									// Define tooltip como visível mas fora da tela para poder calcular dimensões
@@ -606,36 +633,49 @@ export default function Disponibilidade() {
 
 									// Posicionamento horizontal
 									if (spaceRight >= tooltipWidth + 10) {
-										// Suficiente espaço à direita
 										tooltip.style.left = rect.right + 10 + "px";
 									} else {
-										// Não há espaço à direita, posicionar à esquerda
 										tooltip.style.left = rect.left - tooltipWidth - 10 + "px";
 									}
 
 									// Posicionamento vertical
 									if (spaceBottom >= tooltipHeight + 10) {
-										// Suficiente espaço abaixo
 										tooltip.style.top = rect.top + "px";
 									} else {
-										// Não há espaço abaixo, posicionar acima ou ajustar para caber na tela
 										const topPosition = Math.max(
 											10,
 											rect.bottom - tooltipHeight,
 										);
 										tooltip.style.top = topPosition + "px";
 									}
-								});
-
-								// Esconde o tooltip quando o mouse sai
-								info.el.addEventListener("mouseleave", () => {
-									tooltip.style.display = "none";
-								});
-
-								// Remove o tooltip quando o evento é desmontado
-								return () => {
-									document.body.removeChild(tooltip);
 								};
+
+								const handleMouseLeave = () => {
+									tooltip.style.display = "none";
+								};
+
+								info.el.addEventListener("mouseenter", handleMouseEnter);
+								info.el.addEventListener("mouseleave", handleMouseLeave);
+
+								// Armazena handlers para remoção no unmount
+								(info.el as HTMLElement & { _tooltipHandlers?: { enter: () => void; leave: () => void } })._tooltipHandlers = {
+									enter: handleMouseEnter,
+									leave: handleMouseLeave,
+								};
+							}}
+							// Cleanup correto: remove tooltip do DOM e listeners do elemento
+							eventWillUnmount={(info) => {
+								const el = info.el as HTMLElement & {
+									_tooltip?: HTMLDivElement;
+									_tooltipHandlers?: { enter: () => void; leave: () => void };
+								};
+								if (el._tooltip && document.body.contains(el._tooltip)) {
+									document.body.removeChild(el._tooltip);
+								}
+								if (el._tooltipHandlers) {
+									el.removeEventListener("mouseenter", el._tooltipHandlers.enter);
+									el.removeEventListener("mouseleave", el._tooltipHandlers.leave);
+								}
 							}}
 							//Permite selecionar eventos
 							selectable={true}
@@ -656,15 +696,8 @@ export default function Disponibilidade() {
 							//Permite editar eventos ao clicar
 							eventClick={(data) => {
 								if (data.event.extendedProps?.status === "indisponivel") {
-									// Se for um bloqueio (indisponibilidade) e não for coordenador/professor, bloqueia
-									if (
-										data.event.extendedProps?.status === "indisponivel" &&
-										!temPermissaoGeral
-									) {
-										showNotification(
-											"error",
-											"Você não tem permissão para alterar bloqueios de agenda.",
-										);
+									// Apenas admin/coordenador podem interagir com bloqueios
+									if (!temPermissaoIndisponibilidade) {
 										return;
 									}
 									setActionModalMode("unavailable");
@@ -844,8 +877,8 @@ export default function Disponibilidade() {
 														Cadastrar consulta
 													</button>
 
-													{/* BOTÃO DE BLOQUEIO: Só aparece para Admin, Coordenador ou Professor */}
-													{temPermissaoGeral && (
+													{/* BOTÃO DE BLOQUEIO: Só aparece para Admin e Coordenador */}
+													{temPermissaoIndisponibilidade && (
 														<button
 															type='button'
 															className='inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-red-600'
@@ -856,8 +889,8 @@ export default function Disponibilidade() {
 													)}
 												</>
 											) : (
-												/* BOTÃO DE LIBERAR DIA: Só aparece para quem tem permissão */
-												temPermissaoGeral && (
+												/* BOTÃO DE LIBERAR DIA: Só aparece para Admin e Coordenador */
+												temPermissaoIndisponibilidade && (
 													<button
 														type='button'
 														className='inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-green-600'
