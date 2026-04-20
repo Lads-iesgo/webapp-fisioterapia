@@ -178,6 +178,7 @@ export default function Home() {
 				title: ind.descricao || "Dia Indisponível",
 				start: ind.data_indisponivel,
 				allDay: true,
+				display: 'background',
 				backgroundColor: "#EF4444", // Vermelho
 				borderColor: "#EF4444",
 				extendedProps: {
