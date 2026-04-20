@@ -48,6 +48,8 @@ export interface Fisioterapeuta {
 	cpf: string;
 	semestre: string;
 	perfil_id: number;
+	// 1 = ativo, 0 = inativo. Opcional enquanto a coluna ainda não existe no banco.
+	ativo?: number;
 }
 
 export interface Indisponibilidade {

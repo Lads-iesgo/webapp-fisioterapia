@@ -11,7 +11,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/pt-br";
 import { EventInput, EventClickArg } from "@fullcalendar/core";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Dialog, Transition, Select } from "@headlessui/react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
@@ -70,6 +70,100 @@ export default function Disponibilidade() {
 	const [selectedUnavailableEventId, setSelectedUnavailableEventId] = useState<
 		string | null
 	>(null);
+
+	// Filtros da listagem: "all" representa "Todos"
+	const [filtroAlunoId, setFiltroAlunoId] = useState<string>("all");
+	const [filtroPacienteId, setFiltroPacienteId] = useState<string>("all");
+
+	// Referência ao FullCalendar para mudar a visualização programaticamente
+	const calendarRef = useRef<FullCalendar | null>(null);
+
+	// Input nativo de data (escondido) — disparado ao clicar no título do calendário
+	const dateInputRef = useRef<HTMLInputElement | null>(null);
+
+	// Aplica a escolha do usuário: muda para a visão diária no dia selecionado
+	function irParaDia(dataStr: string) {
+		if (!dataStr) return;
+		const api = calendarRef.current?.getApi();
+		if (!api) return;
+		// Usa horário local para evitar deslocamento de fuso ao parsear "YYYY-MM-DD"
+		const [ano, mes, dia] = dataStr.split("-").map(Number);
+		api.changeView("timeGridDay", new Date(ano, mes - 1, dia));
+	}
+
+	// Torna o título do FullCalendar (ex: "Abril 2026") clicável para abrir
+	// o seletor de data nativo. Reaplica a cada mudança de visualização porque
+	// o FullCalendar recria/atualiza o elemento do título.
+	function tornarTituloClicavel() {
+		const titleEl = document.querySelector(".fc-toolbar-title") as
+			| (HTMLElement & {
+					_dayPickerHandler?: () => void;
+					_dayPickerEnter?: () => void;
+					_dayPickerLeave?: () => void;
+			  })
+			| null;
+		if (!titleEl) return;
+
+		// Lê o título direto da API do FullCalendar (fonte canônica) em vez do
+		// DOM — evita duplicação se o FC mutou o título antes do nosso callback.
+		const tituloTexto =
+			calendarRef.current?.getApi().view.title ||
+			(titleEl.textContent || "").trim();
+		titleEl.innerHTML =
+			`<span>${tituloTexto}</span>` +
+			`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:0.5rem;display:inline-block;vertical-align:middle"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+		// Aparência de botão: padding, borda inferior tracejada, hover com fundo azul claro
+		titleEl.style.cursor = "pointer";
+		titleEl.style.display = "inline-flex";
+		titleEl.style.alignItems = "center";
+		titleEl.style.gap = "0.25rem";
+		titleEl.style.padding = "0.25rem 0.75rem";
+		titleEl.style.borderRadius = "0.5rem";
+		titleEl.style.borderBottom = "2px dashed #1e3a8a";
+		titleEl.style.color = "#1e3a8a";
+		titleEl.style.transition = "background-color 0.15s, color 0.15s";
+		titleEl.title = "Clique para escolher um dia";
+
+		// Limpa handlers antigos antes de reatribuir
+		if (titleEl._dayPickerHandler)
+			titleEl.removeEventListener("click", titleEl._dayPickerHandler);
+		if (titleEl._dayPickerEnter)
+			titleEl.removeEventListener("mouseenter", titleEl._dayPickerEnter);
+		if (titleEl._dayPickerLeave)
+			titleEl.removeEventListener("mouseleave", titleEl._dayPickerLeave);
+
+		const onEnter = () => {
+			titleEl.style.backgroundColor = "rgba(30, 58, 138, 0.1)";
+		};
+		const onLeave = () => {
+			titleEl.style.backgroundColor = "";
+		};
+
+		const handler = () => {
+			const input = dateInputRef.current;
+			if (!input) return;
+			const inputWithPicker = input as HTMLInputElement & {
+				showPicker?: () => void;
+			};
+			try {
+				if (typeof inputWithPicker.showPicker === "function") {
+					inputWithPicker.showPicker();
+				} else {
+					input.click();
+				}
+			} catch {
+				input.click();
+			}
+		};
+
+		titleEl.addEventListener("click", handler);
+		titleEl.addEventListener("mouseenter", onEnter);
+		titleEl.addEventListener("mouseleave", onLeave);
+		titleEl._dayPickerHandler = handler;
+		titleEl._dayPickerEnter = onEnter;
+		titleEl._dayPickerLeave = onLeave;
+	}
 
 	useEffect(() => {
 		const userDataString = localStorage.getItem("userData");
@@ -409,7 +503,18 @@ export default function Disponibilidade() {
 
 	//Efeito para transformar as consultas em eventos do FullCalendar
 	useEffect(() => {
-		const eventos: EventInput[] = consulta.map((item) => {
+		// Aplica os filtros de Aluno e Paciente de forma cumulativa
+		const consultasFiltradas = consulta.filter((item) => {
+			const matchAluno =
+				filtroAlunoId === "all" ||
+				String(item.fisioterapeuta_id) === filtroAlunoId;
+			const matchPaciente =
+				filtroPacienteId === "all" ||
+				String(item.paciente_id) === filtroPacienteId;
+			return matchAluno && matchPaciente;
+		});
+
+		const eventos: EventInput[] = consultasFiltradas.map((item) => {
 			const paciente = pacientes.find((p) => p.id === item.paciente_id);
 			const fisioterapeuta = fisioterapeutas.find(
 				(f) => f.id === item.fisioterapeuta_id,
@@ -479,7 +584,15 @@ export default function Disponibilidade() {
 			};
 		});
 		setEvents([...eventos, ...eventosIndisponiveis]);
-	}, [consulta, pacientes, fisioterapeutas, horarios, indisponibilidades]);
+	}, [
+		consulta,
+		pacientes,
+		fisioterapeutas,
+		horarios,
+		indisponibilidades,
+		filtroAlunoId,
+		filtroPacienteId,
+	]);
 
 	return (
 		<RouteGuard>
@@ -555,8 +668,68 @@ export default function Disponibilidade() {
 			{/* Criação do componente calendário */}
 			<main className='flex flex-col min-h-screen justify-center items-center p-0'>
 				<div className='flex justify-center items-center w-full'>
-					<div className='w-full px-2 mt-20 md:ml-[288px] md:w-[calc(85vw-320px)] md:px-0'>
+					<div className='relative w-full px-2 mt-20 md:ml-[288px] md:w-[calc(85vw-320px)] md:px-0'>
+						{/* Input de data oculto, disparado ao clicar no título do calendário */}
+						<input
+							ref={dateInputRef}
+							type='date'
+							onChange={(e) => irParaDia(e.target.value)}
+							aria-hidden='true'
+							tabIndex={-1}
+							className='pointer-events-none absolute left-1/2 top-12 h-0 w-0 -translate-x-1/2 opacity-0'
+						/>
+
+						{/* Filtros de busca: Aluno e Paciente */}
+						<div className='mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2'>
+							<div className='flex flex-col'>
+								<label
+									htmlFor='filtro-aluno'
+									className='mb-1 text-sm font-medium text-gray-700'
+								>
+									Filtrar por Aluno
+								</label>
+								<select
+									id='filtro-aluno'
+									value={filtroAlunoId}
+									onChange={(e) => setFiltroAlunoId(e.target.value)}
+									className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950'
+								>
+									<option value='all'>Todos</option>
+									{fisioterapeutas.map((f) => (
+										<option key={f.id} value={String(f.id)}>
+											{f.nome_completo}
+										</option>
+									))}
+								</select>
+							</div>
+							<div className='flex flex-col'>
+								<label
+									htmlFor='filtro-paciente'
+									className='mb-1 text-sm font-medium text-gray-700'
+								>
+									Filtrar por Paciente
+								</label>
+								<select
+									id='filtro-paciente'
+									value={filtroPacienteId}
+									onChange={(e) => setFiltroPacienteId(e.target.value)}
+									className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950'
+								>
+									<option value='all'>Todos</option>
+									{pacientes.map((p) => (
+										<option key={p.id} value={String(p.id)}>
+											{p.nome_completo}
+										</option>
+									))}
+								</select>
+							</div>
+						</div>
+
 						<FullCalendar
+							ref={calendarRef}
+							//Reaplica o handler de clique no título sempre que a visualização muda
+							//(o FullCalendar recria o elemento `.fc-toolbar-title` a cada render).
+							datesSet={tornarTituloClicavel}
 							//Opções do calendário
 							plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
 							//Configuração do cabeçalho do calendário

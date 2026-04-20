@@ -35,7 +35,15 @@ export const ALLOWED_ROUTES: Record<"GROUP_1" | "GROUP_2", string[]> = {
     "/cadastroPaciente",
     "/cadastroUsuario",
     "/cadastroConsulta",
+    "/alunos",
+    "/professores",
   ],
+};
+
+// Restrições por role — quando um path está aqui, além de pertencer ao grupo
+// permitido, o usuário precisa ter um dos roles listados.
+export const ROUTE_ROLE_RESTRICTIONS: Record<string, UserRole[]> = {
+  "/professores": [ROLES.ADMIN, ROLES.COORDENADOR],
 };
 
 // Rotas de redirecionamento padrão (fallback) por grupo
@@ -56,16 +64,29 @@ export function getUserGroup(role: string | null | undefined): "GROUP_1" | "GROU
   return null;
 }
 
-// Verifica se um grupo pode acessar determinada rota
+// Verifica se um grupo (e opcionalmente um role) pode acessar determinada rota
 export function canAccessRoute(
   group: "GROUP_1" | "GROUP_2" | null,
-  pathname: string
+  pathname: string,
+  role?: UserRole | null
 ): boolean {
   if (!group) return false;
   // Verifica se a rota começa com alguma das rotas permitidas
-  return ALLOWED_ROUTES[group].some(
+  const groupAllows = ALLOWED_ROUTES[group].some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
+  if (!groupAllows) return false;
+
+  // Se a rota tem restrição por role, valida o role do usuário
+  const restrictedMatch = Object.entries(ROUTE_ROLE_RESTRICTIONS).find(
+    ([route]) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+  if (restrictedMatch) {
+    const allowedRoles = restrictedMatch[1];
+    if (!role || !allowedRoles.includes(role)) return false;
+  }
+
+  return true;
 }
 
 // Retorna a rota padrão de redirecionamento para um grupo
