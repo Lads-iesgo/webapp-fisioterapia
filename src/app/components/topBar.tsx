@@ -7,31 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCookies } from "next-client-cookies";
 import { useNotification } from "./Notification";
 import { useAuth } from "./AuthContext";
-
-// Itens do menu mobile com restrição por grupo
-const MOBILE_MENU_ITEMS = [
-	{ href: "/home", label: "Home", groups: ["GROUP_1"] as const },
-	{
-		href: "/disponibilidade",
-		label: "Disponibilidade",
-		groups: ["GROUP_2"] as const,
-	},
-	{
-		href: "/cadastroPaciente",
-		label: "Cadastro de Paciente",
-		groups: ["GROUP_2"] as const,
-	},
-	{
-		href: "/cadastroUsuario",
-		label: "Cadastro de Usuário",
-		groups: ["GROUP_2"] as const,
-	},
-	{
-		href: "/cadastroConsulta",
-		label: "Cadastro de Consulta",
-		groups: ["GROUP_2"] as const,
-	},
-];
+import { getVisibleMenuItems } from "../lib/menuItems";
 
 export default function TopBar(props: TitleProps) {
 	const [isOpen, setIsOpen] = useState(false);
@@ -41,12 +17,9 @@ export default function TopBar(props: TitleProps) {
 	const router = useRouter();
 	const cookies = useCookies();
 	const { showNotification } = useNotification();
-	const { userGroup, logout } = useAuth();
+	const { userGroup, user, logout } = useAuth();
 
-	// Filtra os itens visíveis conforme o grupo do usuário
-	const visibleItems = MOBILE_MENU_ITEMS.filter((item) =>
-		userGroup ? item.groups.includes(userGroup as never) : false,
-	);
+	const visibleItems = getVisibleMenuItems(userGroup, user?.perfil);
 
 	// Função para fazer logout
 	const handleLogout = () => {
@@ -113,25 +86,25 @@ export default function TopBar(props: TitleProps) {
 
 			{/* Menu Mobile - Overlay azul escuro */}
 			<div
-				className={`fixed left-0 w-full bg-blue-900 z-40 flex flex-col items-center justify-center transition-all duration-300 ease-in-out md:hidden ${
+				className={`fixed left-0 w-full bg-blue-900 z-40 flex flex-col items-center overflow-y-auto transition-all duration-300 ease-in-out md:hidden ${
 					isOpen
-						? "top-5 h-[calc(100vh-30px)] opacity-100 visible"
+						? "top-16 h-[calc(100vh-64px)] opacity-100 visible"
 						: "top-0 h-0 opacity-0 invisible"
 				}`}
 			>
-				<nav className='flex flex-col gap-8 text-center'>
+				<nav className='flex w-full flex-col items-center gap-5 py-8 text-center'>
 					{visibleItems.map((item) => (
 						<Link
 							key={item.href}
 							href={item.href}
 							onClick={toggleMenu}
-							className='text-white text-2xl font-semibold hover:text-blue-300 transition-colors'
+							className='text-white text-xl font-semibold hover:text-blue-300 transition-colors'
 						>
 							{item.label}
 						</Link>
 					))}
 					{/* Botão de logout no final da barra */}
-					<div className='w-full px-4 py-6 border-t border-blue-800 flex justify-center'>
+					<div className='mt-4 w-full border-t border-blue-800 px-4 py-6 flex justify-center'>
 						<button
 							onClick={handleLogout}
 							className='flex items-center justify-center text-gray-200 hover:bg-blue-800 rounded-lg px-6 py-3 transition-colors'
@@ -148,7 +121,7 @@ export default function TopBar(props: TitleProps) {
 									clipRule='evenodd'
 								/>
 							</svg>
-							<span className='text-2xl font-semibold '>Sair</span>
+							<span className='text-xl font-semibold'>Sair</span>
 						</button>
 					</div>
 				</nav>

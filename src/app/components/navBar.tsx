@@ -7,38 +7,16 @@ import { useRouter } from "next/navigation";
 import { useCookies } from "next-client-cookies";
 import { useNotification } from "./Notification";
 import { useAuth } from "./AuthContext";
-
-const MENU_ITEMS = [
-	{ href: "/home", label: "Home", groups: ["GROUP_1"] as const },
-	{
-		href: "/disponibilidade",
-		label: "Disponibilidade",
-		groups: ["GROUP_2"] as const,
-	},
-	{
-		href: "/cadastroPaciente",
-		label: "Cadastro de Paciente",
-		groups: ["GROUP_2"] as const,
-	},
-	{
-		href: "/cadastroUsuario",
-		label: "Cadastro de Usuário",
-		groups: ["GROUP_2"] as const,
-	},
-	//{ href: "/cadastroConsulta", label: "Cadastro de Consulta", groups: ["GROUP_2"] as const },
-];
+import { getVisibleMenuItems } from "../lib/menuItems";
 
 //Componente NavBar que representa a barra de navegação lateral
 export default function NavBar() {
 	const router = useRouter();
 	const cookies = useCookies();
 	const { showNotification } = useNotification();
-	const { userGroup, logout } = useAuth();
+	const { userGroup, user, logout } = useAuth();
 
-	// Filtra os itens do menu conforme o grupo do usuário
-	const visibleItems = MENU_ITEMS.filter((item) =>
-		userGroup ? item.groups.includes(userGroup as never) : false,
-	);
+	const visibleItems = getVisibleMenuItems(userGroup, user?.perfil);
 
 	// Função para fazer logout
 	const handleLogout = () => {

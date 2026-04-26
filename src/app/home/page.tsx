@@ -123,7 +123,7 @@ export default function Home() {
 		const eventos: EventInput[] = consulta.map((item) => {
 			const paciente = pacientes.find((p) => p.id === item.paciente_id);
 			const fisioterapeuta = fisioterapeutas.find(
-				(f) => f.id === item.fisioterapeuta_id,
+				(f) => f.id === item.aluno_id,
 			);
 			const horario = horarios.find((h) => h.id === item.horario_id);
 
@@ -161,7 +161,7 @@ export default function Home() {
 				startStr: horario?.horario ? `${horario.horario}` : "",
 				extendedProps: {
 					pacienteId: item.paciente_id,
-					fisioterapeutaId: item.fisioterapeuta_id,
+					fisioterapeutaId: item.aluno_id,
 					horarioId: item.horario_id,
 					status: item.status,
 					pacienteNome: pacienteNome,

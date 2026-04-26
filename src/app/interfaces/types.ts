@@ -12,7 +12,7 @@ export interface Consulta {
 	paciente_id: number | string;
 	data_consulta: Date | string;
 	horario_id?: number;
-	fisioterapeuta_id?: number;
+	aluno_id?: number;
 	status?: string;
 }
 
@@ -22,7 +22,7 @@ export interface Evento {
 	start: string | Date;
 	paciente_id?: number;
 	horario_id?: number;
-	fisioterapeuta_id?: number;
+	aluno_id?: number;
 	status?: string;
 }
 
@@ -36,6 +36,7 @@ export interface Paciente {
 	cpf: string;
 	cep: string;
 	endereco: string;
+	ativo?: number;
 }
 
 export interface Fisioterapeuta {
@@ -48,6 +49,8 @@ export interface Fisioterapeuta {
 	cpf: string;
 	semestre: string;
 	perfil_id: number;
+	// 1 = ativo, 0 = inativo. Opcional enquanto a coluna ainda não existe no banco.
+	ativo?: number;
 }
 
 export interface Indisponibilidade {
