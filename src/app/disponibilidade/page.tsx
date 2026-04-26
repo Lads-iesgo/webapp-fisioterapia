@@ -237,7 +237,7 @@ export default function Disponibilidade() {
 			title: "",
 			start: arg.dateStr,
 			paciente_id: undefined,
-			fisioterapeuta_id: undefined,
+			aluno_id: undefined,
 			horario_id: undefined,
 		});
 
@@ -321,11 +321,7 @@ export default function Disponibilidade() {
 	//Função para lidar com o envio do formulário
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (
-			!newEvent.paciente_id ||
-			!newEvent.fisioterapeuta_id ||
-			!newEvent.horario_id
-		) {
+		if (!newEvent.paciente_id || !newEvent.aluno_id || !newEvent.horario_id) {
 			showNotification("warning", "Por favor, preencha todos os campos.");
 			return;
 		}
@@ -337,7 +333,7 @@ export default function Disponibilidade() {
 		}
 		const novaConsulta: Consulta = {
 			paciente_id: Number(newEvent.paciente_id),
-			fisioterapeuta_id: Number(newEvent.fisioterapeuta_id),
+			aluno_id: Number(newEvent.aluno_id),
 			horario_id: Number(newEvent.horario_id),
 			// Converte para YYYY-MM-DD (formato DATE do MySQL)
 			data_consulta: dataFinal,
@@ -346,16 +342,13 @@ export default function Disponibilidade() {
 
 		//Valida todos os campos antes de enviar
 		const pacienteError = validateField("paciente_id", newEvent.paciente_id);
-		const fisioterapeutaError = validateField(
-			"fisioterapeuta_id",
-			newEvent.fisioterapeuta_id,
-		);
+		const fisioterapeutaError = validateField("aluno_id", newEvent.aluno_id);
 		const horarioError = validateField("horario_id", newEvent.horario_id);
 
 		if (pacienteError || fisioterapeutaError || horarioError) {
 			setFormErrors({
 				paciente_id: pacienteError,
-				fisioterapeuta_id: fisioterapeutaError,
+				aluno_id: fisioterapeutaError,
 				horario_id: horarioError,
 			});
 			showNotification(
@@ -368,7 +361,6 @@ export default function Disponibilidade() {
 		try {
 			//Chamada para a API para salvar a nova consulta
 			const response = await api.post("/consulta", novaConsulta);
-			console.log("Consulta salva:", response.data);
 
 			//Atualiza o estado com a nova consulta retornada pela API
 			setConsulta([...consulta, response.data]);
@@ -445,7 +437,7 @@ export default function Disponibilidade() {
 			title: "",
 			start: "",
 			id: 0,
-			fisioterapeuta_id: 0,
+			aluno_id: 0,
 			paciente_id: 0,
 			horario_id: 0,
 			status: "",
@@ -457,7 +449,7 @@ export default function Disponibilidade() {
 	//Adicione este estado
 	const [formErrors, setFormErrors] = useState({
 		paciente_id: "",
-		fisioterapeuta_id: "",
+		aluno_id: "",
 		horario_id: "",
 	});
 
@@ -506,8 +498,7 @@ export default function Disponibilidade() {
 		// Aplica os filtros de Aluno e Paciente de forma cumulativa
 		const consultasFiltradas = consulta.filter((item) => {
 			const matchAluno =
-				filtroAlunoId === "all" ||
-				String(item.fisioterapeuta_id) === filtroAlunoId;
+				filtroAlunoId === "all" || String(item.aluno_id) === filtroAlunoId;
 			const matchPaciente =
 				filtroPacienteId === "all" ||
 				String(item.paciente_id) === filtroPacienteId;
@@ -517,7 +508,7 @@ export default function Disponibilidade() {
 		const eventos: EventInput[] = consultasFiltradas.map((item) => {
 			const paciente = pacientes.find((p) => p.id === item.paciente_id);
 			const fisioterapeuta = fisioterapeutas.find(
-				(f) => f.id === item.fisioterapeuta_id,
+				(f) => f.id === item.aluno_id,
 			);
 
 			const horario = horarios.find((h) => h.id === item.horario_id);
@@ -556,7 +547,7 @@ export default function Disponibilidade() {
 				startStr: horario?.horario ? `${horario.horario}` : "",
 				extendedProps: {
 					pacienteId: item.paciente_id,
-					fisioterapeutaId: item.fisioterapeuta_id,
+					fisioterapeutaId: item.aluno_id,
 					horarioId: item.horario_id,
 					status: item.status,
 					pacienteNome: pacienteNome,
@@ -695,7 +686,7 @@ export default function Disponibilidade() {
 									className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950'
 								>
 									<option value='all'>Todos</option>
-									{fisioterapeutas.map((f) => (
+									{fisioterapeutas.filter((f) => f.ativo !== 0).map((f) => (
 										<option key={f.id} value={String(f.id)}>
 											{f.nome_completo}
 										</option>
@@ -716,7 +707,7 @@ export default function Disponibilidade() {
 									className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950'
 								>
 									<option value='all'>Todos</option>
-									{pacientes.map((p) => (
+									{pacientes.filter((p) => p.ativo !== 0).map((p) => (
 										<option key={p.id} value={String(p.id)}>
 											{p.nome_completo}
 										</option>
@@ -769,7 +760,8 @@ export default function Disponibilidade() {
 											info.event.extendedProps.pacienteNome || "Não informado"
 										}</p>
                     <p><strong>Aluno:</strong> ${
-											info.event.extendedProps.fisioterapeutaNome || "Não informado"
+											info.event.extendedProps.fisioterapeutaNome ||
+											"Não informado"
 										}</p>
                     <p><strong>Horário:</strong> ${
 											info.event.extendedProps.horario || "Não informado"
@@ -783,7 +775,9 @@ export default function Disponibilidade() {
 								document.body.appendChild(tooltip);
 
 								// Armazena referência no elemento para cleanup via eventWillUnmount
-								(info.el as HTMLElement & { _tooltip?: HTMLDivElement })._tooltip = tooltip;
+								(
+									info.el as HTMLElement & { _tooltip?: HTMLDivElement }
+								)._tooltip = tooltip;
 
 								// Handlers nomeados para remoção limpa
 								const handleMouseEnter = () => {
@@ -831,7 +825,11 @@ export default function Disponibilidade() {
 								info.el.addEventListener("mouseleave", handleMouseLeave);
 
 								// Armazena handlers para remoção no unmount
-								(info.el as HTMLElement & { _tooltipHandlers?: { enter: () => void; leave: () => void } })._tooltipHandlers = {
+								(
+									info.el as HTMLElement & {
+										_tooltipHandlers?: { enter: () => void; leave: () => void };
+									}
+								)._tooltipHandlers = {
 									enter: handleMouseEnter,
 									leave: handleMouseLeave,
 								};
@@ -846,8 +844,14 @@ export default function Disponibilidade() {
 									document.body.removeChild(el._tooltip);
 								}
 								if (el._tooltipHandlers) {
-									el.removeEventListener("mouseenter", el._tooltipHandlers.enter);
-									el.removeEventListener("mouseleave", el._tooltipHandlers.leave);
+									el.removeEventListener(
+										"mouseenter",
+										el._tooltipHandlers.enter,
+									);
+									el.removeEventListener(
+										"mouseleave",
+										el._tooltipHandlers.leave,
+									);
 								}
 							}}
 							//Permite selecionar eventos
@@ -1165,7 +1169,7 @@ export default function Disponibilidade() {
 																} px-4 py-3 text-base select-custom`}
 															>
 																<option value=''>Selecione o paciente</option>
-																{pacientes.map((p) => (
+																{pacientes.filter((p) => p.ativo !== 0).map((p) => (
 																	<option key={p.id} value={p.id}>
 																		{p.nome_completo}
 																	</option>
@@ -1182,38 +1186,35 @@ export default function Disponibilidade() {
 																Aluno
 															</label>
 															<Select
-																value={newEvent.fisioterapeuta_id ?? ""}
+																value={newEvent.aluno_id ?? ""}
 																onChange={(e) => {
 																	const value = Number(e.target.value);
 																	setNewEvent({
 																		...newEvent,
-																		fisioterapeuta_id: value,
+																		aluno_id: value,
 																	});
 																	setFormErrors({
 																		...formErrors,
-																		fisioterapeuta_id: validateField(
-																			"fisioterapeuta_id",
-																			value,
-																		),
+																		aluno_id: validateField("aluno_id", value),
 																	});
 																}}
 																required
 																className={`w-full rounded-md border ${
-																	formErrors.fisioterapeuta_id
+																	formErrors.aluno_id
 																		? "border-red-500"
 																		: "border-gray-300"
 																} px-4 py-3 text-base select-custom`}
 															>
 																<option value=''>Selecione o Aluno</option>
-																{fisioterapeutas.map((f) => (
+																{fisioterapeutas.filter((f) => f.ativo !== 0).map((f) => (
 																	<option key={f.id} value={f.id}>
 																		{f.nome_completo}
 																	</option>
 																))}
 															</Select>
-															{formErrors.fisioterapeuta_id && (
+															{formErrors.aluno_id && (
 																<p className='mt-1 text-sm text-red-600'>
-																	{formErrors.fisioterapeuta_id}
+																	{formErrors.aluno_id}
 																</p>
 															)}
 														</div>

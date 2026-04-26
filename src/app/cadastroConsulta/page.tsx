@@ -15,6 +15,7 @@ import { Fisioterapeuta } from "../interfaces/types";
 interface Paciente {
 	id: number;
 	nome_completo: string;
+	ativo?: number;
 }
 
 //Criação de interfaces para os Horários
@@ -41,10 +42,10 @@ export default function PaginaCadastrarConsulta() {
 
 	//Efeito para buscar os dados dos pacientes, fisioterapeutas e horários ao carregar a página
 	useEffect(() => {
-		api.get<Paciente[]>("/paciente").then((res) => setPacientes(res.data));
+		api.get<Paciente[]>("/paciente").then((res) => setPacientes(res.data.filter((p) => p.ativo !== 0)));
 		api
 			.get<Fisioterapeuta[]>("/usuario")
-			.then((res) => setFisioterapeutas(res.data));
+			.then((res) => setFisioterapeutas(res.data.filter((u) => u.ativo !== 0)));
 		api.get<Horario[]>("/horario").then((res) => setHorarios(res.data));
 	}, []);
 
@@ -84,7 +85,7 @@ export default function PaginaCadastrarConsulta() {
 			// Verifica se todos os campos estão preenchidos
 			await api.post("/consulta", {
 				paciente_id: Number(paciente),
-				fisioterapeuta_id: Number(fisioterapeuta),
+				aluno_id: Number(fisioterapeuta),
 				data_consulta: data,
 				horario_id: Number(horario),
 			});

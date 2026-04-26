@@ -23,13 +23,14 @@ export const MENU_ITEMS: MenuItem[] = [
 		label: "Cadastro de Usuário",
 		groups: ["GROUP_2"],
 	},
-	/*{ href: "/alunos", label: "Alunos", groups: ["GROUP_2"] },
+	{ href: "/alunos", label: "Alunos", groups: ["GROUP_2"] },
+	{ href: "/pacientes", label: "Pacientes", groups: ["GROUP_2"] },
 	{
 		href: "/professores",
 		label: "Professores",
 		groups: ["GROUP_2"],
 		roles: ["admin", "coordenador"],
-	},*/
+	},
 ];
 
 // Filtra itens visíveis com base no grupo e no role do usuário logado

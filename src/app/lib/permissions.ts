@@ -36,6 +36,7 @@ export const ALLOWED_ROUTES: Record<"GROUP_1" | "GROUP_2", string[]> = {
     "/cadastroUsuario",
     "/cadastroConsulta",
     "/alunos",
+    "/pacientes",
     "/professores",
   ],
 };
