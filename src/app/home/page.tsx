@@ -223,7 +223,87 @@ export default function Home() {
 								start: "14:00",
 								end: "16:00",
 								daysOfWeek: [1, 2, 3, 4, 5], // Seg - Sex
-							}}
+							}} 
+							
+								eventContent={(arg) => {
+                                const { extendedProps, display, title } = arg.event;
+
+                                // 1. Se for dia indisponível (background), deixamos o FullCalendar renderizar normalmente
+                         // 1. Se for dia indisponível (background) - Ajustado para Mobile
+if (display === "background" || extendedProps.status === "indisponivel") {
+    return (
+        <div className="w-full h-full flex items-center justify-center bg-red-500 text-white font-bold overflow-hidden pointer-events-none">
+            <span className="
+                text-[7px] md:text-[11px] 
+                truncate 
+                px-0.5 
+                text-center 
+                uppercase 
+                leading-none
+            ">
+                {title}
+            </span>
+        </div>
+    );
+}
+                    // 2. LÓGICA DE QUANTIDADE: Pegamos quantos eventos existem no mesmo dia
+    const eventosNoDia = arg.view.calendar.getEvents().filter(event => 
+        event.startStr.split('T')[0] === arg.event.startStr.split('T')[0] &&
+        event.display !== "background" && 
+        event.extendedProps.status !== "indisponivel"
+    );
+
+    const isSingleEvent = eventosNoDia.length === 1;
+                                // 2. Se for a ÚNICA consulta e estiver na visão do mês, fazemos as 3 linhas compactas
+                                if (isSingleEvent && arg.view.type === "dayGridMonth") {
+                                    return (
+                                        // Tirei o padding e usei leading-none para diminuir a altura e não gerar o "+1"
+                                        <div className="flex flex-col w-full h-full text-[12px] leading-none gap-y-[2px] overflow-hidden text-black justify-center items-center text-center font-medium px-0.5">
+                                            {/* Linha 1: Horário */}
+                                            <div className="truncate" title={`Horário: ${extendedProps.horario}`}>
+                                                Hora: {extendedProps.horario || "--:--"}
+                                            </div>
+                                            
+                                            {/* Linha 2: Fisioterapeuta / Aluno */}
+                                            <div className="truncate" title={`Fisio: ${extendedProps.fisioterapeutaNome}`}>
+                                                Aluno: {extendedProps.fisioterapeutaNome}
+                                            </div>
+                                            
+                                            {/* Linha 3: Paciente */}
+                                            <div className="truncate" title={`Paciente: ${extendedProps.pacienteNome}`}>
+                                                Paciente: {extendedProps.pacienteNome}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+								// 3. SE TIVER MAIS DE UMA CONSULTA: Layout padrão (uma embaixo da outra)
+    return (
+       <div className="flex flex-col w-full 
+        text-[13px] leading-tight 
+        gap-y-[3px] 
+        my-1 
+        py-1
+        overflow-hidden text-black font-medium px-1 
+        border-l-4 border-blue-500 bg-blue-50/30
+    ">
+                                            {/* Linha 1: Horário */}
+                                            <div className="truncate" title={`Horário: ${extendedProps.horario}`}>
+                                                Hora: {extendedProps.horario || "--:--"}
+                                            </div>
+                                            
+                                            {/* Linha 2: Fisioterapeuta / Aluno */}
+                                            <div className="truncate" title={`Fisio: ${extendedProps.fisioterapeutaNome}`}>
+                                                Aluno: {extendedProps.fisioterapeutaNome}
+                                            </div>
+                                            
+                                            {/* Linha 3: Paciente */}
+                                            <div className="truncate" title={`Paciente: ${extendedProps.pacienteNome}`}>
+                                                Paciente: {extendedProps.pacienteNome}
+                                            </div>
+                                        </div>
+    );
+                            }}
 							//Configuração do tooltip
 							eventDidMount={(info) => {
 								if (info.event.extendedProps.status === "indisponivel") {
