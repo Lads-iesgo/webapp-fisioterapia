@@ -585,6 +585,13 @@ export default function Disponibilidade() {
 		filtroPacienteId,
 	]);
 
+	// Re-aplica o título clicável após re-renders do FullCalendar causados
+	// por mudanças no estado events (que não disparam datesSet).
+	useEffect(() => {
+		const timer = setTimeout(tornarTituloClicavel, 0);
+		return () => clearTimeout(timer);
+	}, [events]);
+
 	return (
 		<RouteGuard>
 			{/* Sistema de notificações */}
