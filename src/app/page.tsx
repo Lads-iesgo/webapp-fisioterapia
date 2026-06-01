@@ -1,11 +1,9 @@
-import NavBar from "./components/navBar";
-import TopBar from "./components/topBar";
+import Home from "./login/page";
 
-export default function Home() {
+export default function App() {
   return (
-    <div className="bg-white h-screen flex flex-row">
-      <NavBar />
-      <TopBar title="Disponibilidade" />
-    </div>
+    <>
+      <Home />
+    </>
   );
 }

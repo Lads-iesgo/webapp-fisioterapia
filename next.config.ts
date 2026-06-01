@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
+const dynamicOrigins = (process.env.NEXT_DEV_ORIGINS || "")
+	.split(",")
+	.map((o) => o.trim())
+	.filter(Boolean);
+
 const nextConfig = {
-  allowedDevOrigins: [
-    "http://localhost:3000",
-    "http://192.168.15.10:3000", // coloque aqui o IP que você usa para acessar
-  ],
+	allowedDevOrigins: ["*", ...dynamicOrigins],
+	turbopack: {
+		root: __dirname,
+	},
 };
 
 module.exports = nextConfig;
